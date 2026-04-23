@@ -1,0 +1,41 @@
+{
+  "entities": {
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial transaction record",
+      "type": "object",
+      "properties": {
+        "tanggal": { "type": "string", "format": "date" },
+        "deskripsi": { "type": "string" },
+        "kategori": { "type": "string" },
+        "nominal": { "type": "number" },
+        "status": { "type": "string" },
+        "rekening": { "type": "string" },
+        "qty": { "type": "number" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tanggal", "deskripsi", "kategori", "nominal", "status", "userId"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User business profile and settings",
+      "type": "object",
+      "properties": {
+        "businessName": { "type": "string" },
+        "role": { "type": "string" },
+        "email": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "transactions": {
+      "schema": "Transaction",
+      "description": "Collection of all transactions"
+    },
+    "users": {
+        "schema": "UserProfile",
+        "description": "User profiles"
+    }
+  }
+}

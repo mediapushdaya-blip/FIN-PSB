@@ -1,0 +1,608 @@
+import React, { useState, useEffect } from "react";
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth, db } from './firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
+import Auth from './components/Auth';
+import Layout from "./components/Layout";
+import Dashboard from "./pages/Dashboard";
+import Transactions from "./pages/Transactions";
+import Settings from "./pages/Settings";
+import Laporan from "./pages/Laporan";
+import Rekonsiliasi from "./pages/Rekonsiliasi";
+import { Transaction, TabType, DAFTAR_REKENING, KATEGORI_PENGELUARAN_DETAIL, isExpenseMatch } from "./types";
+import { CheckCircle2, AlertCircle, Plus, X, Loader2, LogOut } from "lucide-react";
+import { transactionService } from "./services/transactionService";
+
+export default function App() {
+  const [user, loadingAuth] = useAuthState(auth);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<{show: boolean, message: string, type: 'success'|'error'}>({show: false, message: '', type: 'success'});
+  
+  // Quick Add Modal State
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [isSubmittingQuickAdd, setIsSubmittingQuickAdd] = useState(false);
+  const [quickAddData, setQuickAddData] = useState({
+    jenis: 'Pemasukan',
+    tanggal: new Date().toISOString().split('T')[0],
+    deskripsi: '',
+    nominal: '',
+    qty: '',
+    hargaModal: '',
+    rekening: DAFTAR_REKENING[0],
+    kategoriDetail: KATEGORI_PENGELUARAN_DETAIL[0]
+  });
+
+  const showToast = (message: string, type: 'success'|'error' = 'success') => {
+    let finalMessage = message;
+    try {
+      // If message is the JSON error info, parse it for a cleaner UI message
+      if (message.startsWith('{') && message.includes('"error"')) {
+        const info = JSON.parse(message);
+        finalMessage = `Error: ${info.error.split(' (')[0]}`; // Shorten error message
+      }
+    } catch (e) {}
+    
+    setToast({show: true, message: finalMessage, type});
+    setTimeout(() => setToast({show: false, message: '', type: 'success'}), 4000);
+  };
+
+  useEffect(() => {
+    if (!user) {
+      setTransactions([]);
+      return;
+    }
+
+    // Test connection
+    transactionService.testConnection().then(ok => {
+      if (!ok) {
+        showToast("Koneksi ke Database bermasalah. Harap segarkan halaman.", 'error');
+      }
+    });
+
+    setIsLoading(true);
+    const unsubscribe = transactionService.getTransactions((data) => {
+      setTransactions(data);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  useEffect(() => {
+    let unsubscribe: () => void;
+
+    if (user) {
+      setLoadingProfile(true);
+      const docRef = doc(db, 'users', user.uid);
+      unsubscribe = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setUserProfile({ id: docSnap.id, ...docSnap.data() });
+        } else {
+          setUserProfile({ email: user.email, role: 'user', status: 'approved' });
+        }
+        setLoadingProfile(false);
+      }, (error) => {
+        console.error("Error fetching user profile:", error);
+        setLoadingProfile(false);
+      });
+    } else {
+      setUserProfile(null);
+      setLoadingProfile(false);
+    }
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [user]);
+
+  const handleAddTransaction = async (tx: Omit<Transaction, 'id'>) => {
+    try {
+      await transactionService.addTransaction(tx);
+      showToast('Data berhasil disimpan');
+      return true;
+    } catch (error: any) {
+      console.error("Error submitting data:", error);
+      showToast(`Gagal tambah data: ${error?.message || 'Terjadi kesalahan'}`, 'error');
+      return false;
+    }
+  };
+
+  const handleEditTransaction = async (tx: Transaction) => {
+    try {
+      await transactionService.updateTransaction(tx);
+      showToast('Data berhasil diperbarui');
+      return true;
+    } catch (error: any) {
+      console.error("Error editing data:", error);
+      showToast(`Gagal perbarui data: ${error?.message || 'Terjadi kesalahan'}`, 'error');
+      return false;
+    }
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    console.log("Attempting to delete document with ID:", id);
+    try {
+      await transactionService.deleteTransaction(id);
+      showToast('Data berhasil dihapus');
+      return true;
+    } catch (error: any) {
+      console.error("Critical error while deleting:", error);
+      const message = error?.message || String(error);
+      showToast(`Gagal hapus: ${message}`, 'error');
+      // For very critical errors, also show a window alert
+      if (message.includes('permission-denied') || message.includes('insufficient permissions')) {
+        alert("Izin Ditolak: Anda tidak diperbolehkan menghapus data ini.");
+      }
+      return false;
+    }
+  };
+  
+  const handleBulkEditTransaction = async (ids: string[], updates: Partial<Transaction>) => {
+    try {
+      await transactionService.bulkUpdateTransactions(ids, updates);
+      showToast(`${ids.length} data berhasil diperbarui`);
+      return true;
+    } catch (error) {
+      console.error("Error bulk editing data:", error);
+      showToast("Terjadi kesalahan saat memperbarui data masal.", 'error');
+      return false;
+    }
+  };
+
+  const handleBulkDeleteTransaction = async (ids: string[]) => {
+    try {
+      await transactionService.bulkDeleteTransactions(ids);
+      showToast(`${ids.length} data berhasil dihapus`);
+      return true;
+    } catch (error: any) {
+      console.error("Error bulk deleting data:", error);
+      showToast(`Gagal hapus masal: ${error?.message || 'Terjadi kesalahan'}`, 'error');
+      return false;
+    }
+  };
+
+  const handleQuickAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingQuickAdd(true);
+    
+    let nominal = Number(quickAddData.nominal);
+    let qty = Number(quickAddData.qty || 0);
+
+    try {
+      if (quickAddData.jenis === 'Pembelian Stok') {
+        await handleAddTransaction({
+          tanggal: quickAddData.tanggal,
+          deskripsi: `Restock Pabrik (Inventory): ${quickAddData.deskripsi}`,
+          kategori: 'Pembelian Stok',
+          nominal: -Math.abs(nominal),
+          qty: qty,
+          status: 'Selesai',
+          rekening: quickAddData.rekening
+        });
+      } else if (quickAddData.jenis === 'Rekap Penjualan') {
+        // 1. Catat kas masuk/pendapatan dari penjualan 
+        await handleAddTransaction({
+          tanggal: quickAddData.tanggal,
+          deskripsi: `Rekap Penjualan Mingguan: ${quickAddData.deskripsi}`,
+          kategori: 'Penjualan',
+          nominal: Math.abs(nominal),
+          qty: qty,
+          status: 'Lunas',
+          rekening: quickAddData.rekening
+        });
+        
+        // 2. Catat HPP/Barang Keluar untuk mengurangi nilai Aset (Inventory)
+        if (qty > 0) {
+          const hargaModalSatuan = Number(quickAddData.hargaModal || 0);
+          const totalHargaPokok = qty * hargaModalSatuan;
+          await handleAddTransaction({
+            tanggal: quickAddData.tanggal,
+            deskripsi: `HPP Penjualan (Otomatis): ${quickAddData.deskripsi}`,
+            kategori: 'HPP / Barang Keluar',
+            nominal: -Math.abs(totalHargaPokok),
+            qty: qty,
+            status: 'Selesai'
+          });
+        }
+      } else {
+        let kategori = quickAddData.jenis;
+        let status = 'Verified';
+
+        if (quickAddData.jenis === 'Pengeluaran Spesifik') {
+          kategori = quickAddData.kategoriDetail;
+        }
+
+        if (isExpenseMatch(kategori) || kategori === 'Pembelian') {
+          nominal = -Math.abs(nominal);
+        } else {
+          nominal = Math.abs(nominal);
+        }
+
+        if (kategori === 'Penjualan' || kategori === 'Pembelian') {
+          status = 'Lunas';
+        } else if (kategori === 'Aset Tetap') {
+          status = 'Selesai';
+        }
+
+        await handleAddTransaction({
+          tanggal: quickAddData.tanggal,
+          deskripsi: quickAddData.deskripsi,
+          kategori,
+          nominal,
+          status,
+          rekening: quickAddData.rekening
+        });
+      }
+
+      setIsQuickAddOpen(false);
+      setQuickAddData(prev => ({...prev, deskripsi: '', nominal: '', qty: '', hargaModal: ''}));
+    } catch(e) {
+      console.error(e);
+    } finally {
+      setIsSubmittingQuickAdd(false);
+    }
+  };
+
+  const handleSaveSettings = () => {
+    showToast('Pengaturan berhasil disimpan');
+  };
+
+  if (loadingAuth || loadingProfile) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
+        <p className="text-slate-500 font-medium">Memuat data akses pengguna...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Auth onLogin={() => {}} />;
+  }
+
+  if (userProfile?.status === 'pending') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full">
+          <div className="h-16 w-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="h-8 w-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Menunggu Persetujuan</h2>
+          <p className="text-slate-600 mb-8">
+            Akun Anda telah terdaftar namun sedang menunggu disetujui oleh Administrator. Silakan hubungi admin untuk mendapatkan akses.
+          </p>
+          <button 
+            onClick={() => signOut(auth)}
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors"
+          >
+            <LogOut className="h-5 w-5" /> Keluar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (userProfile?.status === 'rejected') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full">
+          <div className="h-16 w-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <X className="h-8 w-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Akses Ditolak</h2>
+          <p className="text-slate-600 mb-8">
+            Pendaftaran akun Anda telah ditolak oleh Administrator dan tidak dapat mengakses sistem ini.
+          </p>
+          <button 
+            onClick={() => signOut(auth)}
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors"
+          >
+            <LogOut className="h-5 w-5" /> Keluar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Jika kita memiliki user dari auth tetapi document firestore tidak ada atau belum terbuat sempurna
+  if (user && !userProfile) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
+        <p className="text-slate-500 font-medium">Menyinkronkan akun...</p>
+      </div>
+    );
+  }
+
+  return (
+    <Layout 
+      activeTab={activeTab} 
+      setActiveTab={setActiveTab} 
+      onQuickAdd={() => setIsQuickAddOpen(true)}
+      userProfile={userProfile}
+    >
+      {activeTab === 'dashboard' && (
+        <Dashboard 
+          transactions={transactions} 
+        />
+      )}
+      
+      {activeTab === 'penjualan' && (
+        <Transactions 
+          title="Faktur Penjualan" 
+          type="penjualan" 
+          transactions={transactions} 
+          isLoading={isLoading} 
+          onAdd={handleAddTransaction} 
+          onEdit={handleEditTransaction}
+          onDelete={handleDeleteTransaction}
+          onBulkEdit={handleBulkEditTransaction}
+          onBulkDelete={handleBulkDeleteTransaction}
+          onRefresh={() => {}} 
+        />
+      )}
+      
+      {activeTab === 'pembelian' && (
+        <Transactions 
+          title="Faktur Pembelian" 
+          type="pembelian" 
+          transactions={transactions} 
+          isLoading={isLoading} 
+          onAdd={handleAddTransaction} 
+          onEdit={handleEditTransaction}
+          onDelete={handleDeleteTransaction}
+          onBulkEdit={handleBulkEditTransaction}
+          onBulkDelete={handleBulkDeleteTransaction}
+          onRefresh={() => {}} 
+        />
+      )}
+      
+      {activeTab === 'persediaan' && (
+        <Transactions 
+          title="Stok Persediaan" 
+          type="persediaan" 
+          transactions={transactions} 
+          isLoading={isLoading} 
+          onAdd={handleAddTransaction} 
+          onEdit={handleEditTransaction}
+          onDelete={handleDeleteTransaction}
+          onBulkEdit={handleBulkEditTransaction}
+          onBulkDelete={handleBulkDeleteTransaction}
+          onRefresh={() => {}} 
+        />
+      )}
+      
+      {activeTab === 'kas' && (
+        <Transactions 
+          title="Buku Kas & Bank" 
+          type="kas" 
+          transactions={transactions} 
+          isLoading={isLoading} 
+          onAdd={handleAddTransaction} 
+          onEdit={handleEditTransaction}
+          onDelete={handleDeleteTransaction}
+          onBulkEdit={handleBulkEditTransaction}
+          onBulkDelete={handleBulkDeleteTransaction}
+          onRefresh={() => {}} 
+        />
+      )}
+
+      {activeTab === 'rekonsiliasi' && (
+        <Rekonsiliasi 
+          transactions={transactions} 
+          onAdd={handleAddTransaction} 
+          onRefresh={() => {}} 
+        />
+      )}
+
+      {activeTab === 'aset' && (
+        <Transactions 
+          title="Catatan Aset" 
+          type="aset" 
+          transactions={transactions} 
+          isLoading={isLoading} 
+          onAdd={handleAddTransaction} 
+          onEdit={handleEditTransaction}
+          onDelete={handleDeleteTransaction}
+          onBulkEdit={handleBulkEditTransaction}
+          onBulkDelete={handleBulkDeleteTransaction}
+          onRefresh={() => {}} 
+        />
+      )}
+
+      {activeTab === 'laporan' && (
+        <Laporan transactions={transactions} />
+      )}
+      
+      {activeTab === 'pengaturan' && (
+        userProfile?.role === 'admin' ? (
+          <Settings />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20">
+            <h3 className="text-xl font-bold text-slate-800 mb-2">Akses Terbatas</h3>
+            <p className="text-slate-500">Hanya Administrator yang memiliki akses ke fitur Manajemen Pengguna.</p>
+          </div>
+        )
+      )}
+
+      {/* Quick Add Modal */}
+      {isQuickAddOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="border-b border-slate-100 bg-slate-50/50 p-5 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Plus className="h-5 w-5 text-blue-600" /> Catat Transaksi Cepat
+              </h3>
+              <button onClick={() => setIsQuickAddOpen(false)} className="rounded-full p-1.5 hover:bg-slate-200 text-slate-500 transition-colors">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleQuickAddSubmit} className="p-6 flex flex-col gap-5">
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700">Jenis Transaksi</label>
+                <select 
+                  value={quickAddData.jenis}
+                  onChange={(e) => setQuickAddData({...quickAddData, jenis: e.target.value})}
+                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white"
+                >
+                  <option value="Pemasukan">Pemasukan Kas/Lainnya</option>
+                  <option value="Rekap Penjualan">Rekap Penjualan Mingguan</option>
+                  <option value="Pembelian Stok">Beli Produk (Stok Gudang/Pabrik)</option>
+                  <option value="Pengeluaran Spesifik">Semua Jenis Pengeluaran/Biaya</option>
+                  <option value="Pembelian">Pembelian Non-Stok (Aset Habis Pakai)</option>
+                  <option value="Aset Tetap">Beli Aset Kantor (Laptop/Kendaraan)</option>
+                  <option value="Modal Awal">Setor Modal Awal</option>
+                </select>
+              </div>
+
+              {quickAddData.jenis === 'Pengeluaran Spesifik' && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-slate-700">Rincian Kategori Pengeluaran</label>
+                  <select 
+                    value={quickAddData.kategoriDetail}
+                    onChange={(e) => setQuickAddData({...quickAddData, kategoriDetail: e.target.value})}
+                    className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white"
+                  >
+                    {KATEGORI_PENGELUARAN_DETAIL.map(kat => (
+                      <option key={kat} value={kat}>{kat.replace('Pengeluaran - ', '')}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700">Rekening Tujuan / Ditarik Dari</label>
+                <select 
+                  value={quickAddData.rekening}
+                  onChange={(e) => setQuickAddData({...quickAddData, rekening: e.target.value})}
+                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white"
+                >
+                  {DAFTAR_REKENING.map(rek => (
+                    <option key={rek} value={rek}>{rek}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700">Tanggal</label>
+                <input 
+                  type="date" 
+                  required
+                  value={quickAddData.tanggal}
+                  onChange={(e) => setQuickAddData({...quickAddData, tanggal: e.target.value})}
+                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                  {quickAddData.jenis === 'Rekap Penjualan' ? 'Keterangan/Rentang Waktu' : 'Deskripsi / Keterangan'}
+                </label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder={quickAddData.jenis === 'Rekap Penjualan' ? "Contoh: Minggu ke-1 (1-7 April)" : "Contoh: Beli ATK / Bayar Listrik / Omset"}
+                  value={quickAddData.deskripsi}
+                  onChange={(e) => setQuickAddData({...quickAddData, deskripsi: e.target.value})}
+                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                  {quickAddData.jenis === 'Rekap Penjualan' ? 'Penghasilan Bersih (Netto) - Rp' : quickAddData.jenis === 'Pembelian Stok' ? 'Total Harga Beli/Kulakan (Rp)' : 'Nominal (Rp)'}
+                </label>
+                <p className="text-[11px] text-slate-500 mb-2 leading-relaxed">
+                  {quickAddData.jenis === 'Rekap Penjualan' ? 'Total bersih masuk dompet setelah potongan admin marketplace/ongkir.' : 
+                   quickAddData.jenis === 'Pembelian Stok' ? 'Total invoice biaya pabrik/gudang.' : ''}
+                </p>
+                <input 
+                  type="number" 
+                  required
+                  min="0"
+                  placeholder="0"
+                  value={quickAddData.nominal}
+                  onChange={(e) => setQuickAddData({...quickAddData, nominal: e.target.value})}
+                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                />
+              </div>
+
+              {['Rekap Penjualan', 'Pembelian Stok'].includes(quickAddData.jenis) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                      Total Qty (Pcs)
+                    </label>
+                    <input 
+                      type="number" 
+                      required
+                      min="1"
+                      placeholder="Contoh: 150"
+                      value={quickAddData.qty}
+                      onChange={(e) => setQuickAddData({...quickAddData, qty: e.target.value})}
+                      className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white"
+                    />
+                  </div>
+                  
+                  {quickAddData.jenis === 'Rekap Penjualan' && (
+                    <div>
+                      <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                        Harga Penjualan Pokok Satuan (HPP/Pcs - Rp)
+                      </label>
+                      <input 
+                        type="number" 
+                        required
+                        min="0"
+                        placeholder="Contoh: 35000"
+                        value={quickAddData.hargaModal}
+                        onChange={(e) => setQuickAddData({...quickAddData, hargaModal: e.target.value})}
+                        className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-2 flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <button 
+                  type="button" 
+                  onClick={() => setIsQuickAddOpen(false)}
+                  className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                >
+                  Batal
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isSubmittingQuickAdd}
+                  className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-70 shadow-sm transition-all hover:shadow"
+                >
+                  {isSubmittingQuickAdd ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                  Simpan Transaksi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Global Toast Notification */}
+      {toast.show && (
+        <div className="fixed bottom-6 right-6 z-[70] flex items-center gap-3 rounded-lg bg-slate-800 px-4 py-3 text-white shadow-xl animate-in slide-in-from-bottom-5 fade-in duration-300">
+          {toast.type === 'success' ? (
+            <CheckCircle2 className="h-5 w-5 text-green-400" />
+          ) : (
+            <AlertCircle className="h-5 w-5 text-red-400" />
+          )}
+          <p className="text-sm font-medium">{toast.message}</p>
+        </div>
+      )}
+    </Layout>
+  );
+}
