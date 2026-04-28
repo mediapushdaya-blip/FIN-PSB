@@ -80,18 +80,26 @@ export const transactionService = {
     }
   },
 
-  getTransactions: (callback: (transactions: Transaction[]) => void) => {
+  getTransactions: (callback: (transactions: Transaction[]) => void, isAdmin: boolean = false) => {
     const user = auth.currentUser;
     if (!user) {
       callback([]);
       return () => {};
     }
 
-    const q = query(
-      collection(db, COLLECTION_NAME),
-      where('userId', '==', user.uid),
-      orderBy('tanggal', 'desc')
-    );
+    let q;
+    if (isAdmin) {
+      q = query(
+        collection(db, COLLECTION_NAME),
+        orderBy('tanggal', 'desc')
+      );
+    } else {
+      q = query(
+        collection(db, COLLECTION_NAME),
+        where('userId', '==', user.uid),
+        orderBy('tanggal', 'desc')
+      );
+    }
 
     return onSnapshot(q, (snapshot) => {
       const transactions = snapshot.docs.map(doc => ({
@@ -99,6 +107,9 @@ export const transactionService = {
         ...doc.data()
       })) as Transaction[];
       callback(transactions);
+    }, (error) => {
+      console.error("Error in getTransactions snapshot listener:", error);
+      handleFirestoreError(error, 'list', COLLECTION_NAME);
     });
   },
 

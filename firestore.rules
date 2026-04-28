@@ -12,20 +12,18 @@ service cloud.firestore {
 
     // Check if the user is an admin
     function isAdmin() {
-      return isSignedIn() && (
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
-        request.auth.token.email == 'media.pushdaya@gmail.com'
-      );
+      return (isSignedIn() && request.auth.token.email == 'media.pushdaya@gmail.com') ||
+             (isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
     function isValidTransaction(data) {
       return data.tanggal is string && 
-             data.deskripsi is string && data.deskripsi.size() <= 1000 &&
+             data.deskripsi is string && data.deskripsi.size() <= 2000 &&
              data.kategori is string &&
              data.nominal is number &&
              data.status is string &&
-             data.userId == request.auth.uid;
+             (data.userId == request.auth.uid || isAdmin());
     }
 
     // Default deny
@@ -36,21 +34,25 @@ service cloud.firestore {
     // Transactions collection
     match /transactions/{transactionId} {
       allow read: if isSignedIn() && (
-        resource.data.userId == request.auth.uid || 
-        isAdmin()
+        isAdmin() ||
+        (resource != null && resource.data != null && resource.data.userId == request.auth.uid)
       );
       allow create: if isSignedIn() && isValidTransaction(request.resource.data);
       allow update: if isSignedIn() && (
         isAdmin() ||
         (resource.data.userId == request.auth.uid && 
-         isValidTransaction(request.resource.data) && 
-         request.resource.data.userId == resource.data.userId)
+         isValidTransaction(request.resource.data))
       );
       allow delete: if isSignedIn() && (
-        resource.data.userId == request.auth.uid || 
         isAdmin() ||
-        request.auth.token.email == 'media.pushdaya@gmail.com'
+        (resource != null && resource.data != null && resource.data.userId == request.auth.uid)
       );
+    }
+
+    // Settings collection
+    match /settings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     // Public path for connection test

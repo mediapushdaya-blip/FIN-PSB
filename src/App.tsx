@@ -10,7 +10,14 @@ import Transactions from "./pages/Transactions";
 import Settings from "./pages/Settings";
 import Laporan from "./pages/Laporan";
 import Rekonsiliasi from "./pages/Rekonsiliasi";
-import { Transaction, TabType, DAFTAR_REKENING, KATEGORI_PENGELUARAN_DETAIL, isExpenseMatch } from "./types";
+import { 
+  Transaction, 
+  TabType, 
+  DAFTAR_REKENING, 
+  KATEGORI_PENGELUARAN_DETAIL, 
+  isExpenseMatch,
+  isOutflowCategory
+} from "./types";
 import { CheckCircle2, AlertCircle, Plus, X, Loader2, LogOut } from "lucide-react";
 import { transactionService } from "./services/transactionService";
 
@@ -22,6 +29,45 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [startingBalances, setStartingBalances] = useState<Record<string, number>>({});
+  const [balanceDate, setBalanceDate] = useState("");
+  const [appSettings, setAppSettings] = useState({ name: "MY FINANCING", logo: "", favicon: "" });
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    const savedMode = localStorage.getItem('darkMode');
+    if (savedMode !== null) {
+      setDarkMode(savedMode === 'true');
+    } else {
+      // Default to dark mode as requested previously if no preference
+      setDarkMode(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('darkMode', String(darkMode));
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  useEffect(() => {
+    // Update Document Title and Favicon
+    document.title = appSettings.name || "MY FINANCING";
+    if (appSettings.favicon) {
+      const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+      if (link) {
+        link.href = appSettings.favicon;
+      } else {
+        const newLink = document.createElement('link');
+        newLink.rel = 'icon';
+        newLink.href = appSettings.favicon;
+        document.head.appendChild(newLink);
+      }
+    }
+  }, [appSettings.name, appSettings.favicon]);
   const [toast, setToast] = useState<{show: boolean, message: string, type: 'success'|'error'}>({show: false, message: '', type: 'success'});
   
   // Quick Add Modal State
@@ -40,16 +86,25 @@ export default function App() {
 
   const showToast = (message: string, type: 'success'|'error' = 'success') => {
     let finalMessage = message;
-    try {
-      // If message is the JSON error info, parse it for a cleaner UI message
-      if (message.startsWith('{') && message.includes('"error"')) {
-        const info = JSON.parse(message);
-        finalMessage = `Error: ${info.error.split(' (')[0]}`; // Shorten error message
-      }
-    } catch (e) {}
+    
+    if (type === 'error') {
+      try {
+        if (message.startsWith('{') && message.includes('"error"')) {
+          const info = JSON.parse(message);
+          finalMessage = `Error: ${info.error}`;
+        }
+      } catch (e) {}
+    } else {
+      try {
+        if (message.startsWith('{') && message.includes('"error"')) {
+          const info = JSON.parse(message);
+          finalMessage = info.error.split(' (')[0];
+        }
+      } catch (e) {}
+    }
     
     setToast({show: true, message: finalMessage, type});
-    setTimeout(() => setToast({show: false, message: '', type: 'success'}), 4000);
+    setTimeout(() => setToast({show: false, message: '', type: 'success'}), 5000);
   };
 
   useEffect(() => {
@@ -66,13 +121,49 @@ export default function App() {
     });
 
     setIsLoading(true);
+    // Use userProfile?.role === 'admin' to decide if we fetch everything
+    // This effect will run when user or userProfile changes
+    const isAdmin = userProfile?.role === 'admin';
     const unsubscribe = transactionService.getTransactions((data) => {
       setTransactions(data);
       setIsLoading(false);
-    });
+    }, isAdmin);
 
     return () => unsubscribe();
+  }, [user, userProfile?.role]);
+
+  useEffect(() => {
+    if (!user) return;
+    const docRef = doc(db, "settings", "starting_balances");
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setStartingBalances(data.balances || {});
+        setBalanceDate(data.date || "");
+      }
+    }, (error) => {
+      console.error("Error fetching starting balances:", error);
+    });
+    return () => unsubscribe();
   }, [user]);
+
+  useEffect(() => {
+    // Fetch general settings even if not logged in for the login screen
+    const docRef = doc(db, "settings", "general");
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setAppSettings({
+          name: data.name || "MY FINANCING",
+          logo: data.logo || "",
+          favicon: data.favicon || ""
+        });
+      }
+    }, (error) => {
+      console.error("Error fetching general settings:", error);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     let unsubscribe: () => void;
@@ -127,18 +218,19 @@ export default function App() {
 
   const handleDeleteTransaction = async (id: string) => {
     console.log("Attempting to delete document with ID:", id);
+    if (!id) {
+      showToast('Error: Document ID is missing', 'error');
+      return false;
+    }
+
     try {
       await transactionService.deleteTransaction(id);
       showToast('Data berhasil dihapus');
       return true;
     } catch (error: any) {
       console.error("Critical error while deleting:", error);
-      const message = error?.message || String(error);
-      showToast(`Gagal hapus: ${message}`, 'error');
-      // For very critical errors, also show a window alert
-      if (message.includes('permission-denied') || message.includes('insufficient permissions')) {
-        alert("Izin Ditolak: Anda tidak diperbolehkan menghapus data ini.");
-      }
+      const rawMessage = error?.message || String(error);
+      showToast(rawMessage, 'error');
       return false;
     }
   };
@@ -218,7 +310,7 @@ export default function App() {
           kategori = quickAddData.kategoriDetail;
         }
 
-        if (isExpenseMatch(kategori) || kategori === 'Pembelian') {
+        if (isOutflowCategory(kategori)) {
           nominal = -Math.abs(nominal);
         } else {
           nominal = Math.abs(nominal);
@@ -263,7 +355,9 @@ export default function App() {
   }
 
   if (!user) {
-    return <Auth onLogin={() => {}} />;
+    return (
+      <Auth onLogin={() => {}} appSettings={appSettings} />
+    );
   }
 
   if (userProfile?.status === 'pending') {
@@ -326,10 +420,32 @@ export default function App() {
       setActiveTab={setActiveTab} 
       onQuickAdd={() => setIsQuickAddOpen(true)}
       userProfile={userProfile}
+      appSettings={appSettings}
+      darkMode={darkMode}
+      setDarkMode={setDarkMode}
     >
       {activeTab === 'dashboard' && (
         <Dashboard 
           transactions={transactions} 
+          startingBalances={startingBalances}
+          balanceDate={balanceDate}
+          appSettings={appSettings}
+          darkMode={darkMode}
+        />
+      )}
+
+      {activeTab === 'transaksi_semua' && (
+        <Transactions 
+          title="Semua Transaksi" 
+          type="all" 
+          transactions={transactions} 
+          isLoading={isLoading} 
+          onAdd={handleAddTransaction} 
+          onEdit={handleEditTransaction}
+          onDelete={handleDeleteTransaction}
+          onBulkEdit={handleBulkEditTransaction}
+          onBulkDelete={handleBulkDeleteTransaction}
+          onRefresh={() => {}} 
         />
       )}
       
@@ -417,7 +533,11 @@ export default function App() {
       )}
 
       {activeTab === 'laporan' && (
-        <Laporan transactions={transactions} />
+        <Laporan 
+          transactions={transactions} 
+          startingBalances={startingBalances}
+          balanceDate={balanceDate}
+        />
       )}
       
       {activeTab === 'pengaturan' && (

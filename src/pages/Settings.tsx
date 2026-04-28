@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Users, CheckCircle2, XCircle, Clock, Search, ShieldCheck, Edit, X, Wallet, Save, Loader2 } from "lucide-react";
+import { Users, CheckCircle2, XCircle, Clock, Search, ShieldCheck, Edit, X, Wallet, Save, Loader2, Settings as SettingsIcon, Image as ImageIcon, UploadCloud } from "lucide-react";
 import { DAFTAR_REKENING } from "../types";
 import { db } from "../firebase";
 import { collection, getDocs, doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
@@ -7,8 +7,11 @@ import { collection, getDocs, doc, updateDoc, setDoc, getDoc } from 'firebase/fi
 export default function Settings() {
   const [users, setUsers] = useState<any[]>([]);
   const [startingBalances, setStartingBalances] = useState<Record<string, number>>({});
+  const [balanceDate, setBalanceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [appSettings, setAppSettings] = useState({ name: "MY FINANCING", logo: "", favicon: "" });
   const [loading, setLoading] = useState(true);
   const [savingBalances, setSavingBalances] = useState(false);
+  const [savingGeneral, setSavingGeneral] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingUser, setEditingUser] = useState<any>(null);
 
@@ -17,13 +20,16 @@ export default function Settings() {
       const querySnapshot = await getDocs(collection(db, "users"));
       const usersList: any[] = [];
       querySnapshot.forEach((doc) => {
-        usersList.push({ id: doc.id, ...doc.data() });
+        const data = doc.data();
+        if (data && data.email) {
+          usersList.push({ id: doc.id, ...data });
+        }
       });
       // Sort: pending first, then by email
       usersList.sort((a, b) => {
         if (a.status === 'pending' && b.status !== 'pending') return -1;
         if (a.status !== 'pending' && b.status === 'pending') return 1;
-        return a.email.localeCompare(b.email);
+        return (a.email || "").localeCompare(b.email || "");
       });
       setUsers(usersList);
     } catch (error) {
@@ -36,27 +42,83 @@ export default function Settings() {
       const docRef = doc(db, "settings", "starting_balances");
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        setStartingBalances(docSnap.data() as Record<string, number>);
+        const data = docSnap.data();
+        setStartingBalances(data.balances || {});
+        setBalanceDate(data.date || new Date().toISOString().split('T')[0]);
       }
     } catch (error) {
       console.error("Error fetching balances:", error);
     }
   };
 
+  const fetchGeneralSettings = async () => {
+    try {
+      const docRef = doc(db, "settings", "general");
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setAppSettings({
+          name: data.name || "MY FINANCING",
+          logo: data.logo || "",
+          favicon: data.favicon || ""
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching general settings:", error);
+    }
+  };
+
   useEffect(() => {
-    Promise.all([fetchUsers(), fetchStartingBalances()]).finally(() => setLoading(false));
+    Promise.all([fetchUsers(), fetchStartingBalances(), fetchGeneralSettings()]).finally(() => setLoading(false));
   }, []);
 
   const handleSaveBalances = async () => {
     setSavingBalances(true);
     try {
-      await setDoc(doc(db, "settings", "starting_balances"), startingBalances);
-      alert("Saldo awal berhasil disimpan.");
+      await setDoc(doc(db, "settings", "starting_balances"), {
+        balances: startingBalances,
+        date: balanceDate
+      });
+      alert("Saldo awal dan tanggal berhasil disimpan.");
     } catch (error) {
       console.error("Error saving balances:", error);
       alert("Gagal menyimpan saldo awal.");
     } finally {
       setSavingBalances(false);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'favicon') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 800000) {
+      alert("Ukuran file terlalu besar. Maksimal 800KB agar aplikasi tetap cepat.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setAppSettings(prev => ({ ...prev, [type]: base64String }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveGeneral = async () => {
+    setSavingGeneral(true);
+    try {
+      await setDoc(doc(db, "settings", "general"), {
+        name: appSettings.name,
+        logo: appSettings.logo,
+        favicon: appSettings.favicon
+      });
+      alert("Pengaturan umum berhasil disimpan. Perubahan pada Favicon akan terlihat setelah refresh.");
+    } catch (error) {
+      console.error("Error saving general settings:", error);
+      alert("Gagal menyimpan pengaturan umum.");
+    } finally {
+      setSavingGeneral(false);
     }
   };
 
@@ -92,15 +154,104 @@ export default function Settings() {
     }
   };
 
-  const filteredUsers = users.filter(u => u.email.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredUsers = users.filter(u => 
+    u.email && u.email.toLowerCase().includes((searchTerm || "").toLowerCase())
+  );
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 pb-10">
       <div>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Akses & Pengguna</h2>
-        <p className="mt-1.5 text-sm font-medium text-slate-500">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight transition-colors">Akses & Pengguna</h2>
+        <p className="mt-1.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors">
           Kelola izin akses pengguna yang mendaftar ke aplikasi.
         </p>
+      </div>
+
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors">
+        <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+              <SettingsIcon className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">Pengaturan Umum</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Sesuaikan identitas aplikasi Anda.</p>
+            </div>
+          </div>
+          <button 
+            onClick={handleSaveGeneral}
+            disabled={savingGeneral}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-sm shadow-indigo-200 hover:shadow-md h-[40px]"
+          >
+            {savingGeneral ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Simpan Pengaturan
+          </button>
+        </div>
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">Nama Aplikasi</label>
+              <input 
+                type="text"
+                value={appSettings.name}
+                onChange={(e) => setAppSettings({...appSettings, name: e.target.value})}
+                className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition-all font-semibold"
+                placeholder="MY FINANCING"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">URL Favicon (Tab Browser)</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text"
+                  value={appSettings.favicon}
+                  onChange={(e) => setAppSettings({...appSettings, favicon: e.target.value})}
+                  className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition-all font-medium"
+                  placeholder="https://example.com/favicon.ico"
+                />
+                <label className="cursor-pointer flex items-center justify-center px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">
+                  <UploadCloud className="h-4 w-4" />
+                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'favicon')} />
+                </label>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">URL Logo Utama (Sidebar & Login)</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text"
+                  value={appSettings.logo}
+                  onChange={(e) => setAppSettings({...appSettings, logo: e.target.value})}
+                  className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition-all font-medium"
+                  placeholder="https://example.com/logo.png"
+                />
+                <label className="cursor-pointer flex items-center justify-center px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">
+                  <UploadCloud className="h-4 w-4" />
+                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} />
+                </label>
+              </div>
+              <p className="mt-2 text-[10px] text-slate-400 dark:text-slate-500 font-medium italic">Gunakan link gambar atau upload langsung (Max 800KB).</p>
+            </div>
+          </div>
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 flex flex-col items-center justify-center text-center transition-colors">
+            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em] mb-4">Preview Logo</p>
+            {appSettings.logo ? (
+              <img 
+                src={appSettings.logo} 
+                alt="App Logo Logo" 
+                className="h-20 w-auto object-contain drop-shadow-sm transition-transform hover:scale-105"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=Logo+Error';
+                }}
+              />
+            ) : (
+              <div className="h-20 w-20 rounded-2xl bg-white dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                <ImageIcon className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+              </div>
+            )}
+            <p className="mt-4 text-xs font-bold text-slate-600 dark:text-slate-300">{appSettings.name}</p>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
@@ -114,14 +265,25 @@ export default function Settings() {
               <p className="text-xs text-slate-500">Input saldo awal untuk setiap rekening.</p>
             </div>
           </div>
-          <button 
-            onClick={handleSaveBalances}
-            disabled={savingBalances}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 disabled:opacity-50 transition-all"
-          >
-            {savingBalances ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Simpan Saldo Awal
-          </button>
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black text-slate-400 uppercase leading-none">Tanggal Saldo Awal</label>
+              <input 
+                type="date"
+                value={balanceDate}
+                onChange={(e) => setBalanceDate(e.target.value)}
+                className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-slate-700"
+              />
+            </div>
+            <button 
+              onClick={handleSaveBalances}
+              disabled={savingBalances}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm shadow-emerald-200 hover:shadow-md h-[40px]"
+            >
+              {savingBalances ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Simpan Saldo Awal
+            </button>
+          </div>
         </div>
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           {DAFTAR_REKENING.map((rek) => (
@@ -205,7 +367,9 @@ export default function Settings() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-xs font-medium">
-                      {u.createdAt ? new Date(u.createdAt.seconds * 1000).toLocaleString('id-ID') : '-'}
+                      {u.createdAt && typeof u.createdAt.seconds === 'number' 
+                        ? new Date(u.createdAt.seconds * 1000).toLocaleString('id-ID') 
+                        : '-'}
                     </td>
                     <td className="px-6 py-4">
                       {u.status === 'approved' && (

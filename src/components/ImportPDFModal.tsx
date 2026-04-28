@@ -111,32 +111,32 @@ export default function ImportPDFModal({ isOpen, onClose, onConfirm }: Props) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-2xl w-full max-w-5xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-5xl shadow-xl border dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]"
       >
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <div>
-            <h3 className="text-xl font-bold text-slate-800">Import Rekening Koran PDF</h3>
-            <p className="text-sm font-medium text-slate-500 mt-1">Sistem otomatis mendeteksi transaksi dari PDF Bank Mandiri</p>
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Import Rekening Koran PDF</h3>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Sistem otomatis mendeteksi transaksi dari PDF Bank Mandiri</p>
           </div>
           <button 
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors p-2 bg-slate-50 rounded-full hover:bg-slate-100"
+            className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-2 bg-slate-50 dark:bg-slate-800 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+        <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 dark:bg-slate-950/20">
           {!extractedData ? (
              <div 
                onDragOver={handleDragOver}
                onDrop={handleDrop}
-               className="border-2 border-dashed border-slate-300 rounded-2xl p-10 flex flex-col items-center justify-center text-center bg-white hover:bg-slate-50/50 transition-colors cursor-pointer group"
+               className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-10 flex flex-col items-center justify-center text-center bg-white dark:bg-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group"
                onClick={() => fileInputRef.current?.click()}
              >
                 <input 
@@ -150,17 +150,17 @@ export default function ImportPDFModal({ isOpen, onClose, onConfirm }: Props) {
                 {isExtracting ? (
                   <>
                     <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-4" />
-                    <h4 className="text-lg font-bold text-slate-800 mb-2">Mengekstrak Data PDF...</h4>
-                    <p className="text-sm font-medium text-slate-500 max-w-sm mx-auto">Kami sedang memindai baris per baris transaksi dari rekening koran Anda.</p>
+                    <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">Mengekstrak Data PDF...</h4>
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 max-w-sm mx-auto">Kami sedang memindai baris per baris transaksi dari rekening koran Anda.</p>
                   </>
                 ) : (
                   <>
-                    <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-100 transition-all">
+                    <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-all">
                       <UploadCloud className="h-8 w-8" />
                     </div>
-                    <h4 className="text-lg font-bold text-slate-800 mb-2">Unggah File PDF</h4>
-                    <p className="text-sm font-medium text-slate-500 max-w-sm mx-auto mb-6">Tarik dan letakkan file PDF Mandiri Statement ke area ini, atau klik untuk memilih file dari komputer Anda.</p>
-                    <span className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm shadow-sm">Pilih File PDF</span>
+                    <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">Unggah File PDF</h4>
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-6">Tarik dan letakkan file PDF Mandiri Statement ke area ini, atau klik untuk memilih file dari komputer Anda.</p>
+                    <span className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm shadow-sm group-hover:bg-blue-700 transition-colors">Pilih File PDF</span>
                   </>
                 )}
              </div>
@@ -168,52 +168,52 @@ export default function ImportPDFModal({ isOpen, onClose, onConfirm }: Props) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                  <div className="flex items-center gap-3">
-                   <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                   <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg">
                      <Check className="h-5 w-5" />
                    </div>
                    <div>
-                     <h4 className="font-bold text-slate-800">Ekstraksi Selesai!</h4>
-                     <p className="text-sm font-medium text-slate-500">Ditemukan {extractedData.length} baris transaksi.</p>
+                     <h4 className="font-bold text-slate-800 dark:text-slate-100">Ekstraksi Selesai!</h4>
+                     <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Ditemukan {extractedData.length} baris transaksi.</p>
                    </div>
                  </div>
                  <button 
                   onClick={() => { setExtractedData(null); setFile(null); }}
-                  className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                  className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline"
                  >
                    Ganti File
                  </button>
               </div>
 
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                  <div className="overflow-x-auto w-full">
                     <table className="w-full text-left text-sm whitespace-nowrap">
-                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-500">
+                      <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
                         <tr>
                           <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider">Tanggal</th>
                           <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider min-w-[300px]">Deskripsi</th>
-                          <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider">Rekening Tujuan / Sumber</th>
-                          <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider">Jenis Transaksi</th>
+                          <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider">Rekening</th>
+                          <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider">Jenis</th>
                           <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider">Kategori</th>
                           <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider text-right">Nominal</th>
                           <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider text-center">Aksi</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {extractedData.length === 0 && (
                           <tr>
-                            <td colSpan={7} className="px-4 py-8 text-center text-slate-500 font-medium">
+                            <td colSpan={7} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400 font-medium">
                               Tidak ada transaksi yang dapat dibaca. Pastikan format PDF Mandiri Statement / Kopra yang asli.
                             </td>
                           </tr>
                         )}
                         {extractedData.map((item) => (
-                          <tr key={item.id} className="hover:bg-slate-50/50">
+                          <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                             <td className="px-4 py-3">
                               <input 
                                 type="date"
                                 value={item.tanggal}
                                 onChange={(e) => updateItem(item.id, 'tanggal', e.target.value)}
-                                className="w-32 text-sm border-slate-200 rounded p-1 focus:ring-blue-500"
+                                className="w-32 text-sm border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 rounded p-1 focus:ring-blue-500"
                               />
                             </td>
                             <td className="px-4 py-3">
@@ -221,14 +221,14 @@ export default function ImportPDFModal({ isOpen, onClose, onConfirm }: Props) {
                                 type="text"
                                 value={item.deskripsi}
                                 onChange={(e) => updateItem(item.id, 'deskripsi', e.target.value)}
-                                className="w-full text-sm border border-transparent hover:border-slate-300 focus:border-blue-500 rounded p-1.5 focus:ring-blue-500 transition-colors"
+                                className="w-full text-sm border border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-blue-500 dark:bg-transparent dark:text-slate-200 rounded p-1.5 focus:ring-blue-500 transition-colors"
                               />
                             </td>
                             <td className="px-4 py-3">
                               <select 
                                 value={item.rekening}
                                 onChange={(e) => updateItem(item.id, 'rekening', e.target.value)}
-                                className="text-sm border-slate-200 rounded p-1.5 focus:ring-blue-500 w-40"
+                                className="text-sm border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200 rounded p-1.5 focus:ring-blue-500 w-40"
                               >
                                 {DAFTAR_REKENING.map((rek) => (
                                   <option key={rek} value={rek}>{rek}</option>
@@ -239,7 +239,7 @@ export default function ImportPDFModal({ isOpen, onClose, onConfirm }: Props) {
                               <select 
                                 value={item.tipe}
                                 onChange={(e) => updateItem(item.id, 'tipe', e.target.value)}
-                                className={`text-sm rounded p-1 font-semibold focus:ring-blue-500 ${item.tipe === 'Masuk' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}
+                                className={`text-sm rounded p-1 font-semibold focus:ring-blue-500 ${item.tipe === 'Masuk' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-red-100 dark:bg-rose-900/30 text-red-700 dark:text-rose-400'}`}
                               >
                                 <option value="Masuk">Masuk (Debit)</option>
                                 <option value="Keluar">Keluar (Kredit)</option>
@@ -249,7 +249,7 @@ export default function ImportPDFModal({ isOpen, onClose, onConfirm }: Props) {
                               <select 
                                 value={item.kategori}
                                 onChange={(e) => updateItem(item.id, 'kategori', e.target.value)}
-                                className="text-sm border-slate-200 rounded p-1.5 focus:ring-blue-500 w-40"
+                                className="text-sm border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200 rounded p-1.5 focus:ring-blue-500 w-40"
                               >
                                 {item.tipe === 'Masuk' ? (
                                   <>
@@ -273,13 +273,13 @@ export default function ImportPDFModal({ isOpen, onClose, onConfirm }: Props) {
                                 type="number"
                                 value={item.nominal}
                                 onChange={(e) => updateItem(item.id, 'nominal', Number(e.target.value))}
-                                className="w-32 text-sm border-slate-200 rounded p-1 text-right focus:ring-blue-500 tabular-nums"
+                                className="w-32 text-sm border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 rounded p-1 text-right focus:ring-blue-500 tabular-nums"
                               />
                             </td>
                             <td className="px-4 py-3 text-center">
                               <button 
                                 onClick={() => removeItem(item.id)}
-                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-rose-900/30 rounded transition-colors"
                                 title="Hapus Baris"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -296,16 +296,16 @@ export default function ImportPDFModal({ isOpen, onClose, onConfirm }: Props) {
         </div>
 
         {extractedData && extractedData.length > 0 && (
-          <div className="p-6 border-t border-slate-100 flex items-center justify-between shrink-0 bg-white">
-            <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" /> 
+          <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0 bg-white dark:bg-slate-900">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-amber-500" /> 
               Mohon periksa dan konfirmasi tabel di atas sebelum disimpan.
             </p>
             <div className="flex gap-3">
                <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
                   Batal
                 </button>

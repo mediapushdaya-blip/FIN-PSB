@@ -5,7 +5,7 @@ import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { Loader2, Mail, Lock, UserPlus, LogIn, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'motion/react';
 
-export default function Auth({ onLogin }: { onLogin: () => void }) {
+export default function Auth({ onLogin, appSettings }: { onLogin: () => void, appSettings: { name: string; logo: string; favicon: string } }) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -91,23 +91,23 @@ export default function Auth({ onLogin }: { onLogin: () => void }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 transition-colors duration-300">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden"
+        className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden"
       >
-        <div className="p-8 text-center bg-blue-600">
+        <div className="p-8 text-center bg-blue-600 dark:bg-blue-700">
           <div className="h-12 w-12 bg-white rounded-xl shadow-inner mx-auto mb-4 flex items-center justify-center overflow-hidden relative">
-            <span className="text-xl font-black text-blue-600 absolute z-10">EF</span>
-            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover relative z-20" onError={(e) => ((e.target as HTMLImageElement).style.opacity = '0')} />
+            <span className="text-xl font-black text-blue-600 absolute z-10">{appSettings.name ? appSettings.name.substring(0,2).toUpperCase() : 'EF'}</span>
+            <img src={appSettings.logo || "/logo.png"} alt="Logo" className="w-full h-full object-contain relative z-20" onError={(e) => ((e.target as HTMLImageElement).style.opacity = '0')} />
           </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">ENTEROS FINTRACK</h1>
-          <p className="text-blue-100 text-sm mt-1 font-medium z-10 relative">Sistem Manajemen Keuangan</p>
+          <h1 className="text-2xl font-extrabold text-white tracking-tight leading-tight px-4">{appSettings.name || 'ENTEROS FINTRACK'}</h1>
+          <p className="text-blue-100 text-[10px] mt-2 font-bold tracking-[0.2em] uppercase z-10 relative opacity-80">Sistem Manajemen Keuangan</p>
         </div>
 
         <div className="p-8">
-          <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
             {isLogin ? (
               <><LogIn className="h-5 w-5 text-blue-600" /> Masuk ke Akun</>
             ) : (
@@ -116,14 +116,14 @@ export default function Auth({ onLogin }: { onLogin: () => void }) {
           </h2>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm font-medium">
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Akses</label>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email Akses</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <input 
@@ -132,13 +132,13 @@ export default function Auth({ onLogin }: { onLogin: () => void }) {
                   placeholder="admin@perusahaan.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-700 transition-all text-slate-900 dark:text-slate-200"
                 />
               </div>
             </div>
             
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <input 
@@ -147,13 +147,13 @@ export default function Auth({ onLogin }: { onLogin: () => void }) {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  className="w-full pl-10 pr-12 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-700 transition-all text-slate-900 dark:text-slate-200"
                 />
                 <button
                   type="button"
                   tabIndex={-1}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1"
                 >
                   {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </button>
@@ -162,7 +162,7 @@ export default function Auth({ onLogin }: { onLogin: () => void }) {
 
             {!isLogin && (
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5 flex justify-between">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex justify-between">
                   <span>Konfirmasi Password</span>
                   {!isPasswordMatch && confirmPassword.length > 0 && (
                     <span className="text-red-500 text-xs">Password tidak sama</span>
@@ -176,17 +176,17 @@ export default function Auth({ onLogin }: { onLogin: () => void }) {
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={`w-full pl-10 pr-12 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:bg-white transition-all ${
+                    className={`w-full pl-10 pr-12 py-2.5 bg-slate-50 dark:bg-slate-800 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:bg-white dark:focus:bg-slate-700 transition-all ${
                       !isPasswordMatch && confirmPassword.length > 0 
-                      ? 'border-red-400 text-red-600 focus:ring-red-500' 
-                      : 'border-slate-300 text-slate-900 focus:ring-blue-500'
+                      ? 'border-red-400 dark:border-rose-500 text-red-600 dark:text-rose-400 focus:ring-red-500' 
+                      : 'border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-blue-500'
                     }`}
                   />
                   <button
                     type="button"
                     tabIndex={-1}
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1"
                   >
                     {showConfirmPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </button>
@@ -205,16 +205,16 @@ export default function Auth({ onLogin }: { onLogin: () => void }) {
             </button>
             
             <div className="relative flex items-center py-2">
-              <div className="flex-grow border-t border-slate-200"></div>
-              <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-semibold uppercase tracking-wider">Atau</span>
-              <div className="flex-grow border-t border-slate-200"></div>
+              <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+              <span className="flex-shrink-0 mx-4 text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-wider">Atau</span>
+              <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
             </div>
 
             <button 
               type="button" 
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full py-2.5 rounded-xl text-sm font-bold text-slate-700 bg-white border border-slate-300 shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+              className="w-full py-2.5 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
             >
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                 <>
@@ -243,12 +243,12 @@ export default function Auth({ onLogin }: { onLogin: () => void }) {
           </form>
 
           <div className="mt-8 text-center">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               {isLogin ? "Belum punya akses?" : "Sudah punya akun?"}{" "}
               <button 
                 type="button" 
                 onClick={() => setIsLogin(!isLogin)}
-                className="font-bold text-blue-600 hover:text-blue-800 transition-colors"
+                className="font-bold text-blue-600 hover:text-blue-500 transition-colors"
               >
                 {isLogin ? 'Daftar di sini' : 'Masuk di sini'}
               </button>
