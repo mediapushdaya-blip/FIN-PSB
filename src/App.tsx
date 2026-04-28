@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from './firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { signOut } from 'firebase/auth';
+import { supabase } from './lib/supabase';
 import Auth from './components/Auth';
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -15,14 +12,14 @@ import {
   TabType, 
   DAFTAR_REKENING, 
   KATEGORI_PENGELUARAN_DETAIL, 
-  isExpenseMatch,
   isOutflowCategory
 } from "./types";
 import { CheckCircle2, AlertCircle, Plus, X, Loader2, LogOut } from "lucide-react";
-import { transactionService } from "./services/transactionService";
+import { supabaseService } from "./services/supabaseService";
 
 export default function App() {
-  const [user, loadingAuth] = useAuthState(auth);
+  const [user, setUser] = useState<any>(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
   
@@ -35,11 +32,25 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
+    // Supabase Auth Listener
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoadingAuth(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoadingAuth(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
     const savedMode = localStorage.getItem('darkMode');
     if (savedMode !== null) {
       setDarkMode(savedMode === 'true');
     } else {
-      // Default to dark mode as requested previously if no preference
       setDarkMode(true);
     }
   }, []);
@@ -54,7 +65,6 @@ export default function App() {
   }, [darkMode]);
 
   useEffect(() => {
-    // Update Document Title and Favicon
     document.title = appSettings.name || "MY FINANCING";
     if (appSettings.favicon) {
       const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
@@ -68,9 +78,9 @@ export default function App() {
       }
     }
   }, [appSettings.name, appSettings.favicon]);
+
   const [toast, setToast] = useState<{show: boolean, message: string, type: 'success'|'error'}>({show: false, message: '', type: 'success'});
   
-  // Quick Add Modal State
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [isSubmittingQuickAdd, setIsSubmittingQuickAdd] = useState(false);
   const [quickAddData, setQuickAddData] = useState({
@@ -85,25 +95,7 @@ export default function App() {
   });
 
   const showToast = (message: string, type: 'success'|'error' = 'success') => {
-    let finalMessage = message;
-    
-    if (type === 'error') {
-      try {
-        if (message.startsWith('{') && message.includes('"error"')) {
-          const info = JSON.parse(message);
-          finalMessage = `Error: ${info.error}`;
-        }
-      } catch (e) {}
-    } else {
-      try {
-        if (message.startsWith('{') && message.includes('"error"')) {
-          const info = JSON.parse(message);
-          finalMessage = info.error.split(' (')[0];
-        }
-      } catch (e) {}
-    }
-    
-    setToast({show: true, message: finalMessage, type});
+    setToast({show: true, message, type});
     setTimeout(() => setToast({show: false, message: '', type: 'success'}), 5000);
   };
 
@@ -113,92 +105,64 @@ export default function App() {
       return;
     }
 
-    // Test connection
-    transactionService.testConnection().then(ok => {
-      if (!ok) {
-        showToast("Koneksi ke Database bermasalah. Harap segarkan halaman.", 'error');
-      }
-    });
-
     setIsLoading(true);
-    // Use userProfile?.role === 'admin' to decide if we fetch everything
-    // This effect will run when user or userProfile changes
     const isAdmin = userProfile?.role === 'admin';
-    const unsubscribe = transactionService.getTransactions((data) => {
+    const unsubscribe = supabaseService.subscribeToTransactions((data) => {
       setTransactions(data);
       setIsLoading(false);
-    }, isAdmin);
+    }, user.id, isAdmin);
 
     return () => unsubscribe();
   }, [user, userProfile?.role]);
 
+  // Settings from Supabase
   useEffect(() => {
-    if (!user) return;
-    const docRef = doc(db, "settings", "starting_balances");
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setStartingBalances(data.balances || {});
-        setBalanceDate(data.date || "");
+    const fetchSettings = async () => {
+      const { data: startingData } = await supabase.from('settings').select('*').eq('key', 'starting_balances').single();
+      if (startingData) {
+        setStartingBalances(startingData.value.balances || {});
+        setBalanceDate(startingData.value.date || "");
       }
-    }, (error) => {
-      console.error("Error fetching starting balances:", error);
-    });
-    return () => unsubscribe();
+
+      const { data: generalData } = await supabase.from('settings').select('*').eq('key', 'general').single();
+      if (generalData) {
+        setAppSettings({
+          name: generalData.value.name || "MY FINANCING",
+          logo: generalData.value.logo || "",
+          favicon: generalData.value.favicon || ""
+        });
+      }
+    };
+
+    fetchSettings();
   }, [user]);
 
   useEffect(() => {
-    // Fetch general settings even if not logged in for the login screen
-    const docRef = doc(db, "settings", "general");
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setAppSettings({
-          name: data.name || "MY FINANCING",
-          logo: data.logo || "",
-          favicon: data.favicon || ""
-        });
-      }
-    }, (error) => {
-      console.error("Error fetching general settings:", error);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    let unsubscribe: () => void;
-
     if (user) {
       setLoadingProfile(true);
-      const docRef = doc(db, 'users', user.uid);
-      unsubscribe = onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-          setUserProfile({ id: docSnap.id, ...docSnap.data() });
-        } else {
+      supabaseService.getProfile(user.id)
+        .then(profile => {
+          setUserProfile(profile);
+          setLoadingProfile(false);
+        })
+        .catch(() => {
+          // If profile doesn't exist yet, we'll wait for the trigger or manual creation
           setUserProfile({ email: user.email, role: 'user', status: 'approved' });
-        }
-        setLoadingProfile(false);
-      }, (error) => {
-        console.error("Error fetching user profile:", error);
-        setLoadingProfile(false);
-      });
+          setLoadingProfile(false);
+        });
     } else {
       setUserProfile(null);
       setLoadingProfile(false);
     }
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
   }, [user]);
 
   const handleAddTransaction = async (tx: Omit<Transaction, 'id'>) => {
     try {
-      await transactionService.addTransaction(tx);
+      if (!user) return false;
+      await supabaseService.addTransaction(tx, user.id);
       showToast('Data berhasil disimpan');
       return true;
     } catch (error: any) {
-      console.error("Error submitting data:", error);
       showToast(`Gagal tambah data: ${error?.message || 'Terjadi kesalahan'}`, 'error');
       return false;
     }
@@ -206,42 +170,32 @@ export default function App() {
 
   const handleEditTransaction = async (tx: Transaction) => {
     try {
-      await transactionService.updateTransaction(tx);
+      await supabaseService.updateTransaction(tx);
       showToast('Data berhasil diperbarui');
       return true;
     } catch (error: any) {
-      console.error("Error editing data:", error);
       showToast(`Gagal perbarui data: ${error?.message || 'Terjadi kesalahan'}`, 'error');
       return false;
     }
   };
 
   const handleDeleteTransaction = async (id: string) => {
-    console.log("Attempting to delete document with ID:", id);
-    if (!id) {
-      showToast('Error: Document ID is missing', 'error');
-      return false;
-    }
-
     try {
-      await transactionService.deleteTransaction(id);
+      await supabaseService.deleteTransaction(id);
       showToast('Data berhasil dihapus');
       return true;
     } catch (error: any) {
-      console.error("Critical error while deleting:", error);
-      const rawMessage = error?.message || String(error);
-      showToast(rawMessage, 'error');
+      showToast(error?.message || String(error), 'error');
       return false;
     }
   };
   
   const handleBulkEditTransaction = async (ids: string[], updates: Partial<Transaction>) => {
     try {
-      await transactionService.bulkUpdateTransactions(ids, updates);
+      await supabaseService.bulkUpdateTransactions(ids, updates);
       showToast(`${ids.length} data berhasil diperbarui`);
       return true;
     } catch (error) {
-      console.error("Error bulk editing data:", error);
       showToast("Terjadi kesalahan saat memperbarui data masal.", 'error');
       return false;
     }
@@ -249,96 +203,17 @@ export default function App() {
 
   const handleBulkDeleteTransaction = async (ids: string[]) => {
     try {
-      await transactionService.bulkDeleteTransactions(ids);
+      await supabaseService.bulkDeleteTransactions(ids);
       showToast(`${ids.length} data berhasil dihapus`);
       return true;
     } catch (error: any) {
-      console.error("Error bulk deleting data:", error);
       showToast(`Gagal hapus masal: ${error?.message || 'Terjadi kesalahan'}`, 'error');
       return false;
     }
   };
 
-  const handleQuickAddSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmittingQuickAdd(true);
-    
-    let nominal = Number(quickAddData.nominal);
-    let qty = Number(quickAddData.qty || 0);
-
-    try {
-      if (quickAddData.jenis === 'Pembelian Stok') {
-        await handleAddTransaction({
-          tanggal: quickAddData.tanggal,
-          deskripsi: `Restock Pabrik (Inventory): ${quickAddData.deskripsi}`,
-          kategori: 'Pembelian Stok',
-          nominal: -Math.abs(nominal),
-          qty: qty,
-          status: 'Selesai',
-          rekening: quickAddData.rekening
-        });
-      } else if (quickAddData.jenis === 'Rekap Penjualan') {
-        // 1. Catat kas masuk/pendapatan dari penjualan 
-        await handleAddTransaction({
-          tanggal: quickAddData.tanggal,
-          deskripsi: `Rekap Penjualan Mingguan: ${quickAddData.deskripsi}`,
-          kategori: 'Penjualan',
-          nominal: Math.abs(nominal),
-          qty: qty,
-          status: 'Lunas',
-          rekening: quickAddData.rekening
-        });
-        
-        // 2. Catat HPP/Barang Keluar untuk mengurangi nilai Aset (Inventory)
-        if (qty > 0) {
-          const hargaModalSatuan = Number(quickAddData.hargaModal || 0);
-          const totalHargaPokok = qty * hargaModalSatuan;
-          await handleAddTransaction({
-            tanggal: quickAddData.tanggal,
-            deskripsi: `HPP Penjualan (Otomatis): ${quickAddData.deskripsi}`,
-            kategori: 'HPP / Barang Keluar',
-            nominal: -Math.abs(totalHargaPokok),
-            qty: qty,
-            status: 'Selesai'
-          });
-        }
-      } else {
-        let kategori = quickAddData.jenis;
-        let status = 'Verified';
-
-        if (quickAddData.jenis === 'Pengeluaran Spesifik') {
-          kategori = quickAddData.kategoriDetail;
-        }
-
-        if (isOutflowCategory(kategori)) {
-          nominal = -Math.abs(nominal);
-        } else {
-          nominal = Math.abs(nominal);
-        }
-
-        if (kategori === 'Penjualan' || kategori === 'Pembelian') {
-          status = 'Lunas';
-        } else if (kategori === 'Aset Tetap') {
-          status = 'Selesai';
-        }
-
-        await handleAddTransaction({
-          tanggal: quickAddData.tanggal,
-          deskripsi: quickAddData.deskripsi,
-          kategori,
-          nominal,
-          status,
-          rekening: quickAddData.rekening
-        });
-      }
-
-      setIsQuickAddOpen(false);
-      setQuickAddData(prev => ({...prev, deskripsi: '', nominal: '', qty: '', hargaModal: ''}));
-    } catch(e) {
-      console.error(e);
-    } finally {
-      setIsSubmittingQuickAdd(false);
-    }
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
   const handleSaveSettings = () => {
@@ -372,7 +247,7 @@ export default function App() {
             Akun Anda telah terdaftar namun sedang menunggu disetujui oleh Administrator. Silakan hubungi admin untuk mendapatkan akses.
           </p>
           <button 
-            onClick={() => signOut(auth)}
+            onClick={() => supabase.auth.signOut()}
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
             <LogOut className="h-5 w-5" /> Keluar
@@ -394,7 +269,7 @@ export default function App() {
             Pendaftaran akun Anda telah ditolak oleh Administrator dan tidak dapat mengakses sistem ini.
           </p>
           <button 
-            onClick={() => signOut(auth)}
+            onClick={() => supabase.auth.signOut()}
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
             <LogOut className="h-5 w-5" /> Keluar
@@ -413,6 +288,81 @@ export default function App() {
       </div>
     );
   }
+
+  const handleQuickAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    
+    setIsSubmittingQuickAdd(true);
+    try {
+      const { jenis, tanggal, deskripsi, nominal, rekening, kategoriDetail, qty, hargaModal } = quickAddData;
+      const numNominal = Number(nominal);
+      const numQty = Number(qty || 1);
+      const numHargaModal = Number(hargaModal || 0);
+
+      // Create main transaction
+      let kategori = 'Pemasukan';
+      
+      if (jenis === 'Rekap Penjualan') {
+        kategori = 'Penjualan';
+      } else if (jenis === 'Pembelian Stok') {
+        kategori = 'Pembelian Stok';
+      } else if (jenis === 'Pengeluaran Spesifik') {
+        kategori = kategoriDetail;
+      } else if (jenis === 'Pembelian') {
+        kategori = 'Pembelian';
+      } else if (jenis === 'Aset Tetap') {
+        kategori = 'Aset Tetap';
+      } else if (jenis === 'Modal Awal') {
+        kategori = 'Modal Awal';
+      }
+
+      const mainTx: Omit<Transaction, 'id'> = {
+        tanggal,
+        deskripsi,
+        kategori,
+        nominal: numNominal,
+        rekening,
+        status: 'Lunas',
+        qty: numQty,
+        hargaModal: numHargaModal
+      };
+
+      await supabaseService.addTransaction(mainTx, user.id);
+
+      // If Rekap Penjualan, we also need to add HPP COGS entry
+      if (jenis === 'Rekap Penjualan') {
+        const hppTx: Omit<Transaction, 'id'> = {
+          tanggal,
+          deskripsi: `COGS: ${deskripsi}`,
+          kategori: 'HPP / Barang Keluar',
+          nominal: numQty * (numHargaModal || 0),
+          rekening: 'Internal Storage',
+          status: 'Internal',
+          qty: numQty,
+          hargaModal: numHargaModal
+        };
+        await supabaseService.addTransaction(hppTx, user.id);
+      }
+
+      showToast('Transaksi berhasil ditambahkan');
+      setIsQuickAddOpen(false);
+      setQuickAddData({
+        jenis: 'Pemasukan',
+        tanggal: new Date().toISOString().split('T')[0],
+        deskripsi: '',
+        nominal: '',
+        qty: '',
+        hargaModal: '',
+        rekening: DAFTAR_REKENING[0],
+        kategoriDetail: KATEGORI_PENGELUARAN_DETAIL[0]
+      });
+    } catch (error) {
+      showToast('Gagal menambahkan transaksi', 'error');
+    } finally {
+      setIsSubmittingQuickAdd(false);
+    }
+  };
 
   return (
     <Layout 

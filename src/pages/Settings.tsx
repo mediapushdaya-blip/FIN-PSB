@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Users, CheckCircle2, XCircle, Clock, Search, ShieldCheck, Edit, X, Wallet, Save, Loader2, Settings as SettingsIcon, Image as ImageIcon, UploadCloud } from "lucide-react";
 import { DAFTAR_REKENING } from "../types";
-import { db } from "../firebase";
-import { collection, getDocs, doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
+import { supabase } from "../lib/supabase";
 
 export default function Settings() {
   const [users, setUsers] = useState<any[]>([]);
@@ -17,16 +16,13 @@ export default function Settings() {
 
   const fetchUsers = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, "users"));
-      const usersList: any[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data && data.email) {
-          usersList.push({ id: doc.id, ...data });
-        }
-      });
-      // Sort: pending first, then by email
-      usersList.sort((a, b) => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*');
+      
+      if (error) throw error;
+      
+      const usersList = (data || []).sort((a: any, b: any) => {
         if (a.status === 'pending' && b.status !== 'pending') return -1;
         if (a.status !== 'pending' && b.status === 'pending') return 1;
         return (a.email || "").localeCompare(b.email || "");
@@ -39,12 +35,18 @@ export default function Settings() {
 
   const fetchStartingBalances = async () => {
     try {
-      const docRef = doc(db, "settings", "starting_balances");
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setStartingBalances(data.balances || {});
-        setBalanceDate(data.date || new Date().toISOString().split('T')[0]);
+      const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'starting_balances')
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      if (data) {
+        const value = data.value as any;
+        setStartingBalances(value.balances || {});
+        setBalanceDate(value.date || new Date().toISOString().split('T')[0]);
       }
     } catch (error) {
       console.error("Error fetching balances:", error);
@@ -53,14 +55,20 @@ export default function Settings() {
 
   const fetchGeneralSettings = async () => {
     try {
-      const docRef = doc(db, "settings", "general");
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
+      const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'general')
+        .single();
+        
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      if (data) {
+        const value = data.value as any;
         setAppSettings({
-          name: data.name || "MY FINANCING",
-          logo: data.logo || "",
-          favicon: data.favicon || ""
+          name: value.name || "MY FINANCING",
+          logo: value.logo || "",
+          favicon: value.favicon || ""
         });
       }
     } catch (error) {
@@ -75,10 +83,18 @@ export default function Settings() {
   const handleSaveBalances = async () => {
     setSavingBalances(true);
     try {
-      await setDoc(doc(db, "settings", "starting_balances"), {
-        balances: startingBalances,
-        date: balanceDate
-      });
+      const { error } = await supabase
+        .from('settings')
+        .upsert({
+          key: 'starting_balances',
+          value: {
+            balances: startingBalances,
+            date: balanceDate
+          },
+          updated_at: new Date().toISOString()
+        });
+      
+      if (error) throw error;
       alert("Saldo awal dan tanggal berhasil disimpan.");
     } catch (error) {
       console.error("Error saving balances:", error);
@@ -108,11 +124,19 @@ export default function Settings() {
   const handleSaveGeneral = async () => {
     setSavingGeneral(true);
     try {
-      await setDoc(doc(db, "settings", "general"), {
-        name: appSettings.name,
-        logo: appSettings.logo,
-        favicon: appSettings.favicon
-      });
+      const { error } = await supabase
+        .from('settings')
+        .upsert({
+          key: 'general',
+          value: {
+            name: appSettings.name,
+            logo: appSettings.logo,
+            favicon: appSettings.favicon
+          },
+          updated_at: new Date().toISOString()
+        });
+      
+      if (error) throw error;
       alert("Pengaturan umum berhasil disimpan. Perubahan pada Favicon akan terlihat setelah refresh.");
     } catch (error) {
       console.error("Error saving general settings:", error);
@@ -124,9 +148,12 @@ export default function Settings() {
 
   const handleUpdateStatus = async (userId: string, newStatus: 'approved' | 'rejected') => {
     try {
-      await updateDoc(doc(db, "users", userId), {
-        status: newStatus
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: newStatus })
+        .eq('id', userId);
+        
+      if (error) throw error;
       // Refresh local state without refetching for speed
       setUsers(users.map(u => u.id === userId ? { ...u, status: newStatus } : u));
     } catch (error) {
@@ -140,11 +167,16 @@ export default function Settings() {
     if (!editingUser) return;
     
     try {
-      await updateDoc(doc(db, "users", editingUser.id), {
-        email: editingUser.email,
-        role: editingUser.role,
-        status: editingUser.status
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          email: editingUser.email,
+          role: editingUser.role,
+          status: editingUser.status
+        })
+        .eq('id', editingUser.id);
+        
+      if (error) throw error;
       setUsers(users.map(u => u.id === editingUser.id ? { ...editingUser } : u));
       setEditingUser(null);
       alert("Profil pengguna berhasil diperbarui.");

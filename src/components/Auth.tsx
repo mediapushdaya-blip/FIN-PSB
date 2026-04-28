@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { supabase } from '../lib/supabase';
 import { Loader2, Mail, Lock, UserPlus, LogIn, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -22,30 +20,18 @@ export default function Auth({ onLogin, appSettings }: { onLogin: () => void, ap
     setError('');
     
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      const { error: err } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
       
-      const userRef = doc(db, 'users', result.user.uid);
-      const userSnap = await getDoc(userRef);
-      
-      // Jika user belum ada di Firestore, registrasikan
-      if (!userSnap.exists()) {
-        const isAdmin = result.user.email === 'media.pushdaya@gmail.com';
-        await setDoc(userRef, {
-          email: result.user.email,
-          role: isAdmin ? 'admin' : 'user',
-          status: isAdmin ? 'approved' : 'pending',
-          createdAt: serverTimestamp()
-        });
-      }
-      onLogin();
+      if (err) throw err;
+      // Note: onLogin will be handled by the onAuthStateChange in App.tsx
     } catch (err: any) {
       console.error(err);
-      if (err.code === 'auth/popup-closed-by-user') {
-        setError('Login Google dibatalkan.');
-      } else {
-        setError('Gagal masuk dengan Google.');
-      }
+      setError('Gagal masuk dengan Google.');
     } finally {
       setLoading(false);
     }
@@ -58,33 +44,26 @@ export default function Auth({ onLogin, appSettings }: { onLogin: () => void, ap
 
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
-      } else {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        
-        // Buat document user baru, jadikan admin otomatis jika email adalah media.pushdaya@gmail.com
-        const isAdmin = email === 'media.pushdaya@gmail.com';
-        await setDoc(doc(db, 'users', userCredential.user.uid), {
-          email: userCredential.user.email,
-          role: isAdmin ? 'admin' : 'user',
-          status: isAdmin ? 'approved' : 'pending',
-          createdAt: serverTimestamp()
+        const { error: err } = await supabase.auth.signInWithPassword({
+          email,
+          password,
         });
+        if (err) throw err;
+      } else {
+        const { error: err } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (err) throw err;
+        
+        if (!error) {
+          setError('Silakan cek email untuk verifikasi (jika diaktifkan di Supabase).');
+        }
       }
       onLogin();
     } catch (err: any) {
       console.error(err);
-      let errMsg = "Terjadi kesalahan.";
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        errMsg = "Email atau password salah.";
-      } else if (err.code === 'auth/email-already-in-use') {
-        errMsg = "Email sudah terdaftar.";
-      } else if (err.code === 'auth/weak-password') {
-        errMsg = "Password terlalu lemah (minimal 6 karakter).";
-      } else if (err.code === 'auth/invalid-email') {
-        errMsg = "Format email tidak valid.";
-      }
-      setError(errMsg);
+      setError(err?.message || 'Terjadi kesalahan.');
     } finally {
       setLoading(false);
     }

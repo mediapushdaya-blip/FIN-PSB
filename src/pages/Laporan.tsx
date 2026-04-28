@@ -13,8 +13,6 @@ import {
   KATEGORI_LAIN_LAIN 
 } from "../types";
 import { formatCurrency } from "../utils";
-import { db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 

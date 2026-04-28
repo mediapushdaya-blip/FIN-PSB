@@ -7,6 +7,7 @@ export type Transaction = {
   status: string;
   rekening?: string;
   qty?: number;
+  hargaModal?: number;
 };
 
 export const DAFTAR_REKENING = [

@@ -7,9 +7,7 @@ import {
   Image as ImageIcon, List, Moon, Sun
 } from "lucide-react";
 import { TabType } from "../types";
-import { auth, db } from "../firebase";
-import { signOut } from "firebase/auth";
-import { doc, updateDoc } from "firebase/firestore";
+import { supabase } from "../lib/supabase";
 
 const menuItems: { icon: any; label: string; id: TabType }[] = [
   { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
@@ -76,11 +74,16 @@ export default function Layout({ children, activeTab, setActiveTab, onQuickAdd, 
     
     setIsSavingProfile(true);
     try {
-      await updateDoc(doc(db, "users", userProfile.id), {
-        name: editName,
-        division: editDivision,
-        photoURL: editPhotoURL
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: editName,
+          division: editDivision,
+          photoURL: editPhotoURL
+        })
+        .eq('id', userProfile.id);
+        
+      if (error) throw error;
       setIsProfileModalOpen(false);
     } catch (error) {
       console.error("Gagal update profil", error);
@@ -278,7 +281,7 @@ export default function Layout({ children, activeTab, setActiveTab, onQuickAdd, 
               <p className="text-[10px] font-bold text-slate-500 truncate uppercase tracking-widest">{userProfile?.role || 'Staff'}</p>
             </div>
             <button 
-              onClick={() => signOut(auth)}
+              onClick={() => supabase.auth.signOut()}
               className="p-2 text-slate-500 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-all"
               title="Keluar"
             >
