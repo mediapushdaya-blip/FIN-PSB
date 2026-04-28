@@ -399,8 +399,8 @@ export default function Settings() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-[11px] font-bold text-center tabular-nums">
-                      {u.createdAt && typeof u.createdAt.seconds === 'number' 
-                        ? new Date(u.createdAt.seconds * 1000).toLocaleString('id-ID') 
+                      {u.created_at
+                        ? new Date(u.created_at).toLocaleString('id-ID') 
                         : '-'}
                     </td>
                     <td className="px-6 py-4 text-center">
