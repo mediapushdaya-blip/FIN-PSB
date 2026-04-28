@@ -254,31 +254,31 @@ export default function Settings() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-        <div className="border-b border-slate-100 bg-slate-50/50 p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors">
+        <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <Wallet className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800">Posisi Kas Awal</h3>
-              <p className="text-xs text-slate-500">Input saldo awal untuk setiap rekening.</p>
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">Posisi Kas Awal</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Input saldo awal untuk setiap rekening.</p>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
             <div className="space-y-1">
-              <label className="block text-[10px] font-black text-slate-400 uppercase leading-none">Tanggal Saldo Awal</label>
+              <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase leading-none">Tanggal Saldo Awal</label>
               <input 
                 type="date"
                 value={balanceDate}
                 onChange={(e) => setBalanceDate(e.target.value)}
-                className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-slate-700"
+                className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 transition-colors"
               />
             </div>
             <button 
               onClick={handleSaveBalances}
               disabled={savingBalances}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm shadow-emerald-200 hover:shadow-md h-[40px]"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm shadow-emerald-200 dark:shadow-none hover:shadow-md h-[40px]"
             >
               {savingBalances ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Simpan Saldo Awal
@@ -288,14 +288,14 @@ export default function Settings() {
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           {DAFTAR_REKENING.map((rek) => (
             <div key={rek} className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700">{rek}</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">{rek}</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">Rp</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-xs font-bold">Rp</span>
                 <input 
                   type="number"
                   value={startingBalances[rek] || ''}
                   onChange={(e) => setStartingBalances({...startingBalances, [rek]: Number(e.target.value)})}
-                  className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium"
+                  className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                   placeholder="0"
                 />
               </div>
@@ -304,15 +304,15 @@ export default function Settings() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-        <div className="border-b border-slate-100 bg-slate-50/50 p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors">
+        <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
               <Users className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800">Daftar Pendaftar</h3>
-              <p className="text-xs text-slate-500">Setujui atau tolak akses sistem.</p>
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">Daftar Pendaftar</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Setujui atau tolak akses sistem.</p>
             </div>
           </div>
           <div className="relative">
@@ -322,101 +322,103 @@ export default function Settings() {
               placeholder="Cari email..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+              className="pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
             />
           </div>
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+          <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400 font-medium">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs uppercase text-slate-500 dark:text-slate-400 font-black tracking-wider border-b border-slate-100 dark:border-slate-800 transition-colors">
               <tr>
-                <th className="px-6 py-4 font-semibold">Pengguna (Email)</th>
-                <th className="px-6 py-4 font-semibold">Peranan</th>
-                <th className="px-6 py-4 font-semibold">Waktu Daftar</th>
-                <th className="px-6 py-4 font-semibold">Status</th>
-                <th className="px-6 py-4 font-semibold text-right">Tindakan Admin</th>
+                <th className="px-6 py-4">Pengguna (Email)</th>
+                <th className="px-6 py-4 text-center">Peranan</th>
+                <th className="px-6 py-4 text-center">Waktu Daftar</th>
+                <th className="px-6 py-4 text-center">Status</th>
+                <th className="px-6 py-4 text-right">Tindakan Admin</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 transition-colors">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
                     Memuat data pengguna...
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
                     Tidak ada pengguna ditemukan.
                   </td>
                 </tr>
               ) : (
                 filteredUsers.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-800">{u.email}</td>
-                    <td className="px-6 py-4">
+                  <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200">{u.email}</td>
+                    <td className="px-6 py-4 text-center">
                       {u.role === 'admin' ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-purple-700 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded">
                           <ShieldCheck className="h-3 w-3" /> Admin
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
                           Staf/User
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-xs font-medium">
+                    <td className="px-6 py-4 text-[11px] font-bold text-center tabular-nums">
                       {u.createdAt && typeof u.createdAt.seconds === 'number' 
                         ? new Date(u.createdAt.seconds * 1000).toLocaleString('id-ID') 
                         : '-'}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-center">
                       {u.status === 'approved' && (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full">
                           <CheckCircle2 className="h-3.5 w-3.5" /> Disetujui
                         </span>
                       )}
                       {u.status === 'pending' && (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2.5 py-1 rounded-full">
                           <Clock className="h-3.5 w-3.5" /> Menunggu
                         </span>
                       )}
                       {u.status === 'rejected' && (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-red-700 bg-red-100 px-2.5 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2.5 py-1 rounded-full">
                           <XCircle className="h-3.5 w-3.5" /> Ditolak
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 flex gap-2 justify-end">
-                      {u.role === 'admin' && u.email === 'media.pushdaya@gmail.com' ? (
-                         <span className="text-xs text-slate-400 font-medium italic mt-2">Super Admin</span>
-                      ) : (
-                        <>
-                          {u.status !== 'approved' && (
-                            <button 
-                              onClick={() => handleUpdateStatus(u.id, 'approved')}
-                              className="px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-semibold text-xs rounded-lg transition-colors border border-emerald-200"
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2 justify-end">
+                        {u.role === 'admin' && u.email === 'media.pushdaya@gmail.com' ? (
+                           <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic mt-2">Super Admin</span>
+                        ) : (
+                          <>
+                            {u.status !== 'approved' && (
+                              <button 
+                                onClick={() => handleUpdateStatus(u.id, 'approved')}
+                                className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 font-bold text-[10px] uppercase tracking-widest rounded-lg transition-colors border border-emerald-200 dark:border-emerald-800"
+                              >
+                                Setujui
+                              </button>
+                            )}
+                            {u.status !== 'rejected' && (
+                              <button 
+                                onClick={() => handleUpdateStatus(u.id, 'rejected')}
+                                className="px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 font-bold text-[10px] uppercase tracking-widest rounded-lg transition-colors border border-slate-200 dark:border-slate-700 hover:border-red-200 dark:hover:border-red-800"
+                              >
+                                Tolak
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setEditingUser(u)}
+                              className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] uppercase tracking-widest rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
                             >
-                              Setujui
+                              <Edit className="h-3.5 w-3.5" />
                             </button>
-                          )}
-                          {u.status !== 'rejected' && (
-                            <button 
-                              onClick={() => handleUpdateStatus(u.id, 'rejected')}
-                              className="px-3 py-1.5 bg-white hover:bg-red-50 text-red-600 font-semibold text-xs rounded-lg transition-colors border border-slate-200 hover:border-red-200"
-                            >
-                              Tolak
-                            </button>
-                          )}
-                          <button
-                            onClick={() => setEditingUser(u)}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg transition-colors border border-slate-200"
-                          >
-                            <Edit className="h-3.5 w-3.5" />
-                          </button>
-                        </>
-                      )}
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -428,9 +430,9 @@ export default function Settings() {
 
       {editingUser && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-800">Edit Profil Pengguna</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 transition-colors">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Edit Profil Pengguna</h3>
               <button 
                 onClick={() => setEditingUser(null)}
                 className="text-slate-400 hover:text-slate-600 transition-colors"
@@ -440,22 +442,22 @@ export default function Settings() {
             </div>
             <form onSubmit={handleUpdateProfile} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Akses</label>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email Akses</label>
                 <input 
                   type="email" 
                   required
                   value={editingUser.email}
                   onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Peranan (Role)</label>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Peranan (Role)</label>
                 <select 
                   value={editingUser.role}
                   onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                 >
                   <option value="user">Staf/User</option>
                   <option value="admin">Administrator</option>
@@ -463,11 +465,11 @@ export default function Settings() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Status Akses</label>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Status Akses</label>
                 <select 
                   value={editingUser.status}
                   onChange={(e) => setEditingUser({...editingUser, status: e.target.value})}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                 >
                   <option value="pending">Menunggu (Pending)</option>
                   <option value="approved">Disetujui (Approved)</option>
@@ -479,7 +481,7 @@ export default function Settings() {
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
                   Batal
                 </button>

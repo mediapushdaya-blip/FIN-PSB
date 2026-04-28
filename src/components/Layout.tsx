@@ -135,7 +135,7 @@ export default function Layout({ children, activeTab, setActiveTab, onQuickAdd, 
       >
         <div className="flex h-20 items-center justify-between px-8 border-b border-white/5 bg-[#0f172a]">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-blue-600 shadow-sm overflow-hidden border border-slate-200 p-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white dark:bg-slate-800 text-blue-600 shadow-sm overflow-hidden border border-slate-200 dark:border-slate-700 p-2 transition-colors">
               <img 
                 src={appSettings.logo || "/logo.png"} 
                 alt="App Logo" 

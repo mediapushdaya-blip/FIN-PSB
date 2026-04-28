@@ -347,9 +347,9 @@ export default function App() {
 
   if (loadingAuth || loadingProfile) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
-        <p className="text-slate-500 font-medium">Memuat data akses pengguna...</p>
+        <p className="text-slate-500 dark:text-slate-400 font-medium">Memuat data akses pengguna...</p>
       </div>
     );
   }
@@ -362,18 +362,18 @@ export default function App() {
 
   if (userProfile?.status === 'pending') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full">
-          <div className="h-16 w-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 text-center transition-colors duration-300">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 max-w-md w-full">
+          <div className="h-16 w-16 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-8 w-8" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Menunggu Persetujuan</h2>
-          <p className="text-slate-600 mb-8">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Menunggu Persetujuan</h2>
+          <p className="text-slate-600 dark:text-slate-400 mb-8">
             Akun Anda telah terdaftar namun sedang menunggu disetujui oleh Administrator. Silakan hubungi admin untuk mendapatkan akses.
           </p>
           <button 
             onClick={() => signOut(auth)}
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
             <LogOut className="h-5 w-5" /> Keluar
           </button>
@@ -384,18 +384,18 @@ export default function App() {
 
   if (userProfile?.status === 'rejected') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full">
-          <div className="h-16 w-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 text-center transition-colors duration-300">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 max-w-md w-full">
+          <div className="h-16 w-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-6">
             <X className="h-8 w-8" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Akses Ditolak</h2>
-          <p className="text-slate-600 mb-8">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Akses Ditolak</h2>
+          <p className="text-slate-600 dark:text-slate-400 mb-8">
             Pendaftaran akun Anda telah ditolak oleh Administrator dan tidak dapat mengakses sistem ini.
           </p>
           <button 
             onClick={() => signOut(auth)}
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
             <LogOut className="h-5 w-5" /> Keluar
           </button>
@@ -407,9 +407,9 @@ export default function App() {
   // Jika kita memiliki user dari auth tetapi document firestore tidak ada atau belum terbuat sempurna
   if (user && !userProfile) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 text-center transition-colors duration-300">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
-        <p className="text-slate-500 font-medium">Menyinkronkan akun...</p>
+        <p className="text-slate-500 dark:text-slate-400 font-medium">Menyinkronkan akun...</p>
       </div>
     );
   }
@@ -554,23 +554,23 @@ export default function App() {
       {/* Quick Add Modal */}
       {isQuickAddOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="border-b border-slate-100 bg-slate-50/50 p-5 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Plus className="h-5 w-5 text-blue-600" /> Catat Transaksi Cepat
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
+            <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 p-5 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <Plus className="h-5 w-5 text-blue-600 dark:text-blue-400" /> Catat Transaksi Cepat
               </h3>
-              <button onClick={() => setIsQuickAddOpen(false)} className="rounded-full p-1.5 hover:bg-slate-200 text-slate-500 transition-colors">
+              <button onClick={() => setIsQuickAddOpen(false)} className="rounded-full p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </div>
             
             <form onSubmit={handleQuickAddSubmit} className="p-6 flex flex-col gap-5">
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-slate-700">Jenis Transaksi</label>
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">Jenis Transaksi</label>
                 <select 
                   value={quickAddData.jenis}
                   onChange={(e) => setQuickAddData({...quickAddData, jenis: e.target.value})}
-                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                 >
                   <option value="Pemasukan">Pemasukan Kas/Lainnya</option>
                   <option value="Rekap Penjualan">Rekap Penjualan Mingguan</option>
@@ -584,11 +584,11 @@ export default function App() {
 
               {quickAddData.jenis === 'Pengeluaran Spesifik' && (
                 <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-slate-700">Rincian Kategori Pengeluaran</label>
+                  <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">Rincian Kategori Pengeluaran</label>
                   <select 
                     value={quickAddData.kategoriDetail}
                     onChange={(e) => setQuickAddData({...quickAddData, kategoriDetail: e.target.value})}
-                    className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                   >
                     {KATEGORI_PENGELUARAN_DETAIL.map(kat => (
                       <option key={kat} value={kat}>{kat.replace('Pengeluaran - ', '')}</option>
@@ -598,11 +598,11 @@ export default function App() {
               )}
 
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-slate-700">Rekening Tujuan / Ditarik Dari</label>
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">Rekening Tujuan / Ditarik Dari</label>
                 <select 
                   value={quickAddData.rekening}
                   onChange={(e) => setQuickAddData({...quickAddData, rekening: e.target.value})}
-                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                 >
                   {DAFTAR_REKENING.map(rek => (
                     <option key={rek} value={rek}>{rek}</option>
@@ -611,18 +611,18 @@ export default function App() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-slate-700">Tanggal</label>
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">Tanggal</label>
                 <input 
                   type="date" 
                   required
                   value={quickAddData.tanggal}
                   onChange={(e) => setQuickAddData({...quickAddData, tanggal: e.target.value})}
-                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                   {quickAddData.jenis === 'Rekap Penjualan' ? 'Keterangan/Rentang Waktu' : 'Deskripsi / Keterangan'}
                 </label>
                 <input 
@@ -631,15 +631,15 @@ export default function App() {
                   placeholder={quickAddData.jenis === 'Rekap Penjualan' ? "Contoh: Minggu ke-1 (1-7 April)" : "Contoh: Beli ATK / Bayar Listrik / Omset"}
                   value={quickAddData.deskripsi}
                   onChange={(e) => setQuickAddData({...quickAddData, deskripsi: e.target.value})}
-                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                   {quickAddData.jenis === 'Rekap Penjualan' ? 'Penghasilan Bersih (Netto) - Rp' : quickAddData.jenis === 'Pembelian Stok' ? 'Total Harga Beli/Kulakan (Rp)' : 'Nominal (Rp)'}
                 </label>
-                <p className="text-[11px] text-slate-500 mb-2 leading-relaxed">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2 leading-relaxed">
                   {quickAddData.jenis === 'Rekap Penjualan' ? 'Total bersih masuk dompet setelah potongan admin marketplace/ongkir.' : 
                    quickAddData.jenis === 'Pembelian Stok' ? 'Total invoice biaya pabrik/gudang.' : ''}
                 </p>
@@ -650,14 +650,14 @@ export default function App() {
                   placeholder="0"
                   value={quickAddData.nominal}
                   onChange={(e) => setQuickAddData({...quickAddData, nominal: e.target.value})}
-                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-mono"
                 />
               </div>
 
               {['Rekap Penjualan', 'Pembelian Stok'].includes(quickAddData.jenis) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                       Total Qty (Pcs)
                     </label>
                     <input 
@@ -667,13 +667,13 @@ export default function App() {
                       placeholder="Contoh: 150"
                       value={quickAddData.qty}
                       onChange={(e) => setQuickAddData({...quickAddData, qty: e.target.value})}
-                      className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white"
+                      className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                     />
                   </div>
                   
                   {quickAddData.jenis === 'Rekap Penjualan' && (
                     <div>
-                      <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                      <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                         Harga Penjualan Pokok Satuan (HPP/Pcs - Rp)
                       </label>
                       <input 
@@ -683,18 +683,18 @@ export default function App() {
                         placeholder="Contoh: 35000"
                         value={quickAddData.hargaModal}
                         onChange={(e) => setQuickAddData({...quickAddData, hargaModal: e.target.value})}
-                        className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white"
+                        className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                       />
                     </div>
                   )}
                 </div>
               )}
 
-              <div className="mt-2 flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="mt-2 flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button 
                   type="button" 
                   onClick={() => setIsQuickAddOpen(false)}
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                  className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   Batal
                 </button>
