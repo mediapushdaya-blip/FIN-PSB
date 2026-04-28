@@ -325,8 +325,8 @@ export default function Transactions({ title, type, transactions, isLoading, onA
     <div className="max-w-7xl mx-auto space-y-6 pb-20">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">{title}</h2>
-          <p className="mt-1 text-sm font-medium text-slate-500">
+          <h2 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">{title}</h2>
+          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
             Pusat manajemen data {title.toLowerCase()} PT Putra Serayu Berdaya.
           </p>
         </div>
@@ -472,13 +472,13 @@ export default function Transactions({ title, type, transactions, isLoading, onA
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="flex items-center justify-between p-4 rounded-xl bg-blue-50 border border-blue-100 shadow-sm"
+                className="flex items-center justify-between p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 shadow-sm"
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs ring-4 ring-blue-100">
+                  <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs ring-4 ring-blue-100 dark:ring-blue-900/30">
                     {selectedIds.length}
                   </div>
-                  <p className="text-sm font-bold text-blue-900 tracking-tight">Baris dipilih</p>
+                  <p className="text-sm font-bold text-blue-900 dark:text-blue-200 tracking-tight">Baris dipilih</p>
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -488,7 +488,7 @@ export default function Transactions({ title, type, transactions, isLoading, onA
                         setBulkFormData({});
                         setIsBulkModalOpen(true);
                       }}
-                      className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition-all shadow-blue-200"
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition-all shadow-blue-200 dark:shadow-none"
                     >
                       <Edit2 className="h-4 w-4" />
                       Edit Masal
@@ -514,7 +514,7 @@ export default function Transactions({ title, type, transactions, isLoading, onA
                       Hapus Terpilih
                     </button>
                   )}
-                  <button onClick={() => setSelectedIds([])} className="ml-2 text-slate-400 hover:text-slate-600 p-1.5 transition-colors">
+                  <button onClick={() => setSelectedIds([])} className="ml-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-1.5 transition-colors">
                     <X className="h-5 w-5" />
                   </button>
                 </div>
@@ -664,7 +664,7 @@ export default function Transactions({ title, type, transactions, isLoading, onA
                              });
                              setIsModalOpen(true);
                            }}
-                           className="text-blue-600 hover:text-blue-800 text-xs font-semibold px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                           className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs font-semibold px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                          >
                            Edit
                          </button>
@@ -688,7 +688,7 @@ export default function Transactions({ title, type, transactions, isLoading, onA
                                }
                              }}
                              disabled={deletingId === tx.id}
-                             className="text-red-600 hover:text-red-800 text-xs font-semibold px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                             className="text-red-600 dark:text-rose-400 hover:text-red-800 dark:hover:text-rose-300 text-xs font-semibold px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                            >
                              {deletingId === tx.id ? 'Hapus...' : 'Hapus'}
                            </button>
@@ -1042,7 +1042,7 @@ export default function Transactions({ title, type, transactions, isLoading, onA
             </div>
             
             <form onSubmit={handleBulkSubmit} className="p-5 space-y-5">
-              <p className="text-xs text-slate-500 dark:text-slate-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
+              <p className="text-xs text-slate-500 dark:text-slate-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800 transition-colors">
                 Pilih field yang ingin diubah secara bersamaan untuk semua data yang dipilih. Field yang dikosongkan tidak akan diubah.
               </p>
               

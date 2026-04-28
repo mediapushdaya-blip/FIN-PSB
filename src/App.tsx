@@ -545,8 +545,8 @@ export default function App() {
           <Settings />
         ) : (
           <div className="flex flex-col items-center justify-center py-20">
-            <h3 className="text-xl font-bold text-slate-800 mb-2">Akses Terbatas</h3>
-            <p className="text-slate-500">Hanya Administrator yang memiliki akses ke fitur Manajemen Pengguna.</p>
+          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Akses Terbatas</h3>
+            <p className="text-slate-500 dark:text-slate-400">Hanya Administrator yang memiliki akses ke fitur Manajemen Pengguna.</p>
           </div>
         )
       )}

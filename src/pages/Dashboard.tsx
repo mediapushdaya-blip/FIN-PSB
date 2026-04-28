@@ -200,7 +200,7 @@ export default function Dashboard({
                 <Area 
                   type="monotone" 
                   dataKey="expense" 
-                  stroke={document.documentElement.classList.contains('dark') ? '#334155' : '#e2e8f0'} 
+                  stroke={darkMode ? '#334155' : '#e2e8f0'} 
                   strokeWidth={3}
                   fill="transparent" 
                 />
@@ -291,7 +291,7 @@ function MetricCard({ icon: Icon, label, value, color, isUnit = false, unit = ""
       <p className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{label}</p>
       <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
         {isUnit ? formatNumber(value as number) : formatCurrency(value as number)}
-        {isUnit && <span className="text-xs font-bold text-slate-400 ml-1.5 uppercase">{unit}</span>}
+        {isUnit && <span className="text-xs font-bold text-slate-400 dark:text-slate-500 ml-1.5 uppercase">{unit}</span>}
       </h3>
     </motion.div>
   );

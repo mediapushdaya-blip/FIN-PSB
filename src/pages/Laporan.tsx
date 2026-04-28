@@ -326,7 +326,7 @@ export default function Laporan({
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
-        <p className="text-slate-500 font-medium">Memuat data laporan...</p>
+        <p className="text-slate-500 dark:text-slate-400 font-medium">Memuat data laporan...</p>
       </div>
     );
   }
@@ -355,7 +355,7 @@ export default function Laporan({
       {/* Date Filter Bar */}
       <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center gap-4 transition-colors">
         <div className="flex items-center gap-2">
-          <label className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase">Dari:</label>
+          <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase">Dari:</label>
           <input 
             type="date"
             value={filters.startDate}
@@ -364,7 +364,7 @@ export default function Laporan({
           />
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase">Hingga:</label>
+          <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase">Hingga:</label>
           <input 
             type="date"
             value={filters.endDate}
@@ -372,7 +372,7 @@ export default function Laporan({
             className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <div className="ml-auto text-xs font-bold text-slate-400 dark:text-slate-500">
+        <div className="ml-auto text-xs font-bold text-slate-500 dark:text-slate-400">
           Saldo Awal Terdeteksi: <span className="text-emerald-600 dark:text-emerald-400 font-black">{balanceDate || 'Tidak ada'}</span>
         </div>
       </div>
