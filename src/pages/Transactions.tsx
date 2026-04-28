@@ -21,11 +21,11 @@ interface Props {
   onEdit?: (tx: Transaction) => Promise<boolean>;
   onDelete?: (id: string) => Promise<boolean>;
   onBulkEdit?: (ids: string[], updates: Partial<Transaction>) => Promise<boolean>;
-  onBulkDelete?: (ids: string[]) => Promise<boolean>;
+  onBulkAdd?: (txs: Omit<Transaction, 'id'>[]) => Promise<boolean>;
   onRefresh: () => void;
 }
 
-export default function Transactions({ title, type, transactions, isLoading, onAdd, onEdit, onDelete, onBulkEdit, onBulkDelete, onRefresh }: Props) {
+export default function Transactions({ title, type, transactions, isLoading, onAdd, onEdit, onDelete, onBulkAdd, onBulkEdit, onBulkDelete, onRefresh }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('Semua');
   const [filterKategori, setFilterKategori] = useState('Semua');
@@ -1161,8 +1161,12 @@ export default function Transactions({ title, type, transactions, isLoading, onA
         isOpen={isImportPDFOpen} 
         onClose={() => setIsImportPDFOpen(false)} 
         onConfirm={async (txs) => {
-          for(const tx of txs) {
-            await onAdd(tx);
+          if (onBulkAdd) {
+            await onBulkAdd(txs);
+          } else {
+            for(const tx of txs) {
+              await onAdd(tx);
+            }
           }
           setIsImportPDFOpen(false);
           onRefresh();

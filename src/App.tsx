@@ -168,6 +168,18 @@ export default function App() {
     }
   };
 
+  const handleBulkAddTransaction = async (txs: Omit<Transaction, 'id'>[]) => {
+    try {
+      if (!user) return false;
+      await supabaseService.addTransactions(txs, user.id);
+      showToast(`${txs.length} data berhasil diimport`);
+      return true;
+    } catch (error: any) {
+      showToast(`Gagal import data: ${error?.message || 'Terjadi kesalahan'}`, 'error');
+      return false;
+    }
+  };
+
   const handleEditTransaction = async (tx: Transaction) => {
     try {
       await supabaseService.updateTransaction(tx);
@@ -393,6 +405,7 @@ export default function App() {
           onAdd={handleAddTransaction} 
           onEdit={handleEditTransaction}
           onDelete={handleDeleteTransaction}
+          onBulkAdd={handleBulkAddTransaction}
           onBulkEdit={handleBulkEditTransaction}
           onBulkDelete={handleBulkDeleteTransaction}
           onRefresh={() => {}} 
@@ -408,6 +421,7 @@ export default function App() {
           onAdd={handleAddTransaction} 
           onEdit={handleEditTransaction}
           onDelete={handleDeleteTransaction}
+          onBulkAdd={handleBulkAddTransaction}
           onBulkEdit={handleBulkEditTransaction}
           onBulkDelete={handleBulkDeleteTransaction}
           onRefresh={() => {}} 
@@ -423,6 +437,7 @@ export default function App() {
           onAdd={handleAddTransaction} 
           onEdit={handleEditTransaction}
           onDelete={handleDeleteTransaction}
+          onBulkAdd={handleBulkAddTransaction}
           onBulkEdit={handleBulkEditTransaction}
           onBulkDelete={handleBulkDeleteTransaction}
           onRefresh={() => {}} 
@@ -438,6 +453,7 @@ export default function App() {
           onAdd={handleAddTransaction} 
           onEdit={handleEditTransaction}
           onDelete={handleDeleteTransaction}
+          onBulkAdd={handleBulkAddTransaction}
           onBulkEdit={handleBulkEditTransaction}
           onBulkDelete={handleBulkDeleteTransaction}
           onRefresh={() => {}} 
@@ -453,6 +469,7 @@ export default function App() {
           onAdd={handleAddTransaction} 
           onEdit={handleEditTransaction}
           onDelete={handleDeleteTransaction}
+          onBulkAdd={handleBulkAddTransaction}
           onBulkEdit={handleBulkEditTransaction}
           onBulkDelete={handleBulkDeleteTransaction}
           onRefresh={() => {}} 
@@ -476,6 +493,7 @@ export default function App() {
           onAdd={handleAddTransaction} 
           onEdit={handleEditTransaction}
           onDelete={handleDeleteTransaction}
+          onBulkAdd={handleBulkAddTransaction}
           onBulkEdit={handleBulkEditTransaction}
           onBulkDelete={handleBulkDeleteTransaction}
           onRefresh={() => {}} 

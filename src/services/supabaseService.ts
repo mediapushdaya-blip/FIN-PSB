@@ -56,18 +56,40 @@ export const supabaseService = {
     };
   },
 
-  addTransaction: async (transaction: Omit<Transaction, 'id'>, userId: string) => {
+  addTransaction: async (transaction: Omit<Transaction, "id">, userId: string) => {
     const { data, error } = await supabase
-      .from('transactions')
-      .insert([mapToDB({
-        ...transaction,
-        user_id: userId
-      })])
+      .from("transactions")
+      .insert([
+        mapToDB({
+          ...transaction,
+          user_id: userId,
+        }),
+      ])
       .select()
       .single();
 
     if (error) throw error;
     return mapFromDB(data);
+  },
+
+  addTransactions: async (
+    transactions: Omit<Transaction, "id">[],
+    userId: string
+  ) => {
+    const { data, error } = await supabase
+      .from("transactions")
+      .insert(
+        transactions.map((tx) =>
+          mapToDB({
+            ...tx,
+            user_id: userId,
+          })
+        )
+      )
+      .select();
+
+    if (error) throw error;
+    return data.map(mapFromDB);
   },
 
   updateTransaction: async (transaction: Transaction) => {
